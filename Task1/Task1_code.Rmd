@@ -1,0 +1,43 @@
+First, import the required functions:
+
+```{r}
+# Add all required functions for task 1 from other files
+source("whitening.R")
+```
+
+# Part A
+Test the whitening function:
+
+```{r}
+set.seed(123)
+
+# Generate a multivariate time series-like dataset
+n <- 1000
+p <- 3
+
+# Create correlated variables with different scales
+A <- matrix(c(
+  2.0,  0.8,  0.3,
+  0.5,  1.5,  0.7,
+  0.2, -0.4,  1.0
+), nrow = p, byrow = TRUE)
+
+E <- matrix(rnorm(n * p), nrow = n, ncol = p)
+X <- E %*% t(A)
+
+# Add a nonzero mean to each variable
+X <- sweep(X, 2, c(5, -3, 10), "+")
+
+# Check the original covariance
+cat("Covariance before whitening:\n")
+print(round(cov(X), 3))
+
+# Apply your whitening function
+Z <- whiten_data(X)
+
+cat("\nCovariance after whitening:\n")
+print(round(cov(Z), 6))
+
+cat("\nMeans after whitening:\n")
+print(round(colMeans(Z), 10))
+```
