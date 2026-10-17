@@ -3,6 +3,7 @@ First, import the required functions:
 ```{r}
 # Add all required functions for task 1 from other files
 source("whitening.R")
+source("autocov.R")
 ```
 
 # Part A
@@ -32,7 +33,7 @@ X <- sweep(X, 2, c(5, -3, 10), "+")
 cat("Covariance before whitening:\n")
 print(round(cov(X), 3))
 
-# Apply your whitening function
+# Apply the whitening function
 Z <- whiten_data(X)
 
 cat("\nCovariance after whitening:\n")
@@ -40,4 +41,14 @@ print(round(cov(Z), 6))
 
 cat("\nMeans after whitening:\n")
 print(round(colMeans(Z), 10))
+```
+
+Test the function that returns the autocovariance matrices for a set of lags:
+
+```{r}
+lags <- 1:5
+
+# Use the same standardized test set as above
+Sigma_lags <- autocov_matrices(Z, lags = lags)
+Sigma_lags
 ```
