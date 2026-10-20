@@ -1,3 +1,11 @@
+---
+title: "Task 2"
+output: pdf_document
+date: "2026-10-20"
+---
+
+## Gibbs sampler implementation
+
 ```{r}
 iterate_parameters <- function(data, previous, hyperparams) {
     next_parameters <- list()
@@ -34,34 +42,35 @@ iterate_parameters <- function(data, previous, hyperparams) {
     
     #number of observation from latent group 1
     N_1 <- sum(sapply(zs, function(x) x == 1))
-    
-    #sample from the posterior likelihood of group allocation parameter pi
+    #sample from the conditional likelihood of group allocation parameter pi
     pi <- rbeta(1, a + N_1, b + n - N_1)
     next_parameters$pi <- pi
     
     #sum of group 1
     y_bar_1 <- sum(data[which(sapply(zs, function(x) x == 1))])
-    #sample mu_1 from posterior distribution
+    #sample mu_1 from conditional distribution
     mu_1 <- rnorm(1, 
                   (m_0 + y_bar_1)/(sigma2 + s2_0*N_1),
                   (s2_0*sigma2)/(sigma2+s2_0*N_1)
     )
     next_parameters$mu_1 <- mu_1
     
-    #number fo observation in group 2
+    #number of observation in group 2
     N_2 <- sum(sapply(zs, function(x) x == 2))
     #sum of group 2
     y_bar_2 <- sum(data[which(sapply(zs, function(x) x == 2))])
-    #sample mu_2 from it's posterior distribution
+    #sample mu_2 from it's conditional distribution
     mu_2 <- rnorm(1, 
                   (m_0 + y_bar_2)/(sigma2 + s2_0*N_2),
                   (s2_0*sigma2)/(sigma2+s2_0*N_2)
     )
     next_parameters$mu_2 <- mu_2
-
+    
+    #calculate parameters for the conditional of sigma^2
     alpha_k = alpha_0 + n/2
     beta_k_1 = beta_0 + 1/2 * sum((data-mu_1)^2)
     beta_k_2 = beta_0 + 1/2 * sum((data-mu_2)^2)
+    #sample from the conditional distribution 
     sigma2 = pi * 1/rgamma(1, alpha_k, beta_k_1) + (1-pi) * 1/rgamma(1, alpha_k, beta_k_2)
     next_parameters$sigma2 <- sigma2
     next_parameters
@@ -91,6 +100,7 @@ gibbs_sampler <- function(data, samples_count, burn, hyperparams) {
     previous <- parameters[[1]]
     parameters[[1]] <- iterate_parameters(data, previous, hyperparams)
   }
+  #generate samples
   for (t in 2:samples_count) {
     previous <- parameters[[t-1]]
     parameters[[t]] <- iterate_parameters(data, previous, hyperparams)
@@ -99,6 +109,9 @@ gibbs_sampler <- function(data, samples_count, burn, hyperparams) {
 }
 ```
 
+## Simulation study
+
+## Aplication to the faithful dataset
 ```{r}
 hyperparams = list(
   m_0 = 0,
