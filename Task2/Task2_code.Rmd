@@ -57,6 +57,10 @@ gibbs_sampler <- function(data, samples_count, m_0, s2_0, a, b, alpha_0, beta_0,
     sigma2 = 1/rgamma(1, alpha_0, beta_0)
   )
   parameters[[1]]$zs = rbinom(n, 1, 1-parameters[[1]]$pi) + 1
+  #Burn just replaces the first value repeatedly, thus discarding the previous value
+  for (t in 1:burn) {
+    parameters[[1]] <- iterate_parameters(data, m_0, s2_0, a, b, alpha_0, beta_0, parameters[[1]])
+  }
   for (t in 2:samples_count) {
     parameters[[t]] <- iterate_parameters(data, m_0, s2_0, a, b, alpha_0, beta_0, parameters[[t-1]])
   }
@@ -65,5 +69,5 @@ gibbs_sampler <- function(data, samples_count, m_0, s2_0, a, b, alpha_0, beta_0,
 ```
 
 ```{r}
-results <- gibbs_sampler(faithful$eruptions, 100, 0, 1, 1, 1, 1, 1, 0)
+gibbs_sampler(faithful$eruptions, 100, 0, 1, 1, 1, 1, 1, 100)
 ```
