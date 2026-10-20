@@ -4,7 +4,7 @@ block_bootstrap <- function(data, B) {
   # sample indices from {1, ..., n-B+1}
   # for the starting points of the blocks
   h = ceiling(n/B)
-  i_s <- sample(seq(1, n-B+1), h)
+  i_s <- sample(seq(1, n-B+1), h, replace = TRUE)
   
   # generate the blocks based on the indices
   # and concatenate into a matrix
