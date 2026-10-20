@@ -51,9 +51,6 @@ gibbs_sampler <- function(data, samples_count, m_0, s2_0, a, b, alpha_0, beta_0,
                   (s2_0*sigma2)/(sigma2+s2_0*N_2)
     )
     parameters$mu_2[t] <- mu_2
-    if (is.na(mu_1) || is.na(mu_2)) {
-    browser()
-    }
 
     alpha_k = alpha_0 + n/2
     beta_k_1 = beta_0 + 1/2 * sum((data-mu_1)^2)
