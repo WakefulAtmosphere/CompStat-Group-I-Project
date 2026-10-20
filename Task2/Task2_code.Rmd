@@ -1,6 +1,14 @@
 ```{r}
-iterate_parameters <- function(data, m_0, s2_0, a, b, alpha_0, beta_0, previous) {
+iterate_parameters <- function(data, previous, hyperparams) {
     next_parameters <- list()
+    
+    m_0 <- hyperparams$m_0
+    s2_0 <- hyperparams$s2_0
+    a <- hyperparams$a
+    b <- hyperparams$b
+    alpha_0 <- hyperparams$alpha_0
+    beta_0 <- hyperparams$beta_0
+    
     mu_1 <- previous$mu_1
     mu_2 <- previous$mu_2
     pi <- previous$pi
@@ -46,9 +54,17 @@ iterate_parameters <- function(data, m_0, s2_0, a, b, alpha_0, beta_0, previous)
     next_parameters
 }
 
-gibbs_sampler <- function(data, samples_count, m_0, s2_0, a, b, alpha_0, beta_0, burn) {
+gibbs_sampler <- function(data, samples_count, burn, hyperparams) {
   n <- length(data)
   parameters <- vector(mode="list", length=samples_count)
+  
+  m_0 <- hyperparams$m_0
+  s2_0 <- hyperparams$s2_0
+  a <- hyperparams$a
+  b <- hyperparams$b
+  alpha_0 <- hyperparams$alpha_0
+  beta_0 <- hyperparams$beta_0
+  
   #Initialise prior values from distribution
   parameters[[1]] <- list(
     mu_1 = rnorm(1, m_0, s2_0),
@@ -59,15 +75,25 @@ gibbs_sampler <- function(data, samples_count, m_0, s2_0, a, b, alpha_0, beta_0,
   parameters[[1]]$zs = rbinom(n, 1, 1-parameters[[1]]$pi) + 1
   #Burn just replaces the first value repeatedly, thus discarding the previous value
   for (t in 1:burn) {
-    parameters[[1]] <- iterate_parameters(data, m_0, s2_0, a, b, alpha_0, beta_0, parameters[[1]])
+    previous <- parameters[[1]]
+    parameters[[1]] <- iterate_parameters(data, previous, hyperparams)
   }
   for (t in 2:samples_count) {
-    parameters[[t]] <- iterate_parameters(data, m_0, s2_0, a, b, alpha_0, beta_0, parameters[[t-1]])
+    previous <- parameters[[t-1]]
+    parameters[[t]] <- iterate_parameters(data, previous, hyperparams)
   }
   parameters
 }
 ```
 
 ```{r}
-gibbs_sampler(faithful$eruptions, 100, 0, 1, 1, 1, 1, 1, 100)
+hyperparams = list(
+  m_0 = 0,
+  s2_0 = 1,
+  a = 1,
+  b = 1,
+  alpha_0 = 1,
+  beta_0 = 1
+)
+gibbs_sampler(faithful$eruptions, 100, 100, hyperparams)
 ```
