@@ -14,6 +14,7 @@ iterate_parameters <- function(data, previous, hyperparams) {
     pi <- previous$pi
     sigma2 <- previous$sigma2
     zs <- previous$zs
+    n<- length(data)
     z_i <- numeric(n)
     for (i in 1:n) {
       y_i <- data[i]
