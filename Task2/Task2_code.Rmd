@@ -16,10 +16,13 @@ iterate_parameters <- function(data, previous, hyperparams) {
     zs <- previous$zs
     n<- length(data)
     z_i <- numeric(n)
+    
     for (i in 1:n) {
       y_i <- data[i]
+      #conditional likelihood for the generated data
       p_1 <- dnorm(y_i, mu_1, sigma2)*pi/
         (pi*dnorm(y_i, mu_1, sigma2)+(1-pi)*dnorm(y_i, mu_2, sigma2))
+      #randomize latent group allocation
       if (runif(1, 0, 1) < p_1) {
         z_i[i] <- 1
       } else {
@@ -29,18 +32,27 @@ iterate_parameters <- function(data, previous, hyperparams) {
     zs <- z_i
     next_parameters$zs <- zs
     
+    #number of observation from latent group 1
     N_1 <- sum(sapply(zs, function(x) x == 1))
+    
+    #sample from the posterior likelihood of group allocation parameter pi
     pi <- rbeta(1, a + N_1, b + n - N_1)
     next_parameters$pi <- pi
     
+    #sum of group 1
     y_bar_1 <- sum(data[which(sapply(zs, function(x) x == 1))])
+    #sample mu_1 from posterior distribution
     mu_1 <- rnorm(1, 
                   (m_0 + y_bar_1)/(sigma2 + s2_0*N_1),
                   (s2_0*sigma2)/(sigma2+s2_0*N_1)
     )
     next_parameters$mu_1 <- mu_1
+    
+    #number fo observation in group 2
     N_2 <- sum(sapply(zs, function(x) x == 2))
+    #sum of group 2
     y_bar_2 <- sum(data[which(sapply(zs, function(x) x == 2))])
+    #sample mu_2 from it's posterior distribution
     mu_2 <- rnorm(1, 
                   (m_0 + y_bar_2)/(sigma2 + s2_0*N_2),
                   (s2_0*sigma2)/(sigma2+s2_0*N_2)
@@ -96,5 +108,18 @@ hyperparams = list(
   alpha_0 = 1,
   beta_0 = 1
 )
-gibbs_sampler(faithful$eruptions, 100, 100, hyperparams)
+
+mean <- mean(faithful$eruptions)
+std <- sd(faithful$eruptions)
+preprocessed_data <- (faithful$eruptions - mean)/ std
+
 ```
+
+```{r}
+gibbs_sampler(preprocessed_data, 100, 100, hyperparams)
+```
+
+```{r}
+
+```
+
