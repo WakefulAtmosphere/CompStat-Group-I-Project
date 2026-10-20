@@ -1,21 +1,11 @@
 ```{r}
-gibbs_sampler <- function(data, samples_count, m_0, s2_0, a, b, alpha_0, beta_0, burn) {
-  n <- length(data)
-  parameters <- vector(mode="list", length=samples_count)
-  #Initialise prior values from distribution
-  parameters[[1]] <- list(
-    mu_1 = rnorm(1, m_0, s2_0),
-    mu_2 = rnorm(1, m_0, s2_0),
-    pi = rbeta(1, a, b),
-    sigma2 = 1/rgamma(1, alpha_0, beta_0)
-    #Observe that zs does not get initialised. This may blow up later.
-  )
-  for (t in 2:samples_count) {
-    mu_1 <- parameters[[t-1]]$mu_1
-    mu_2 <- parameters[[t-1]]$mu_2
-    pi <- parameters[[t-1]]$pi
-    sigma2 <- parameters[[t-1]]$sigma2
-    zs <- parameters[[t-1]]$zs
+iterate_parameters <- function(data, m_0, s2_0, a, b, alpha_0, beta_0, previous) {
+    next_parameters <- list()
+    mu_1 <- previous$mu_1
+    mu_2 <- previous$mu_2
+    pi <- previous$pi
+    sigma2 <- previous$sigma2
+    zs <- previous$zs
     z_i <- numeric(n)
     for (i in 1:n) {
       y_i <- data[i]
@@ -28,37 +18,52 @@ gibbs_sampler <- function(data, samples_count, m_0, s2_0, a, b, alpha_0, beta_0,
       }
     }
     zs <- z_i
-    parameters[[t]]$zs <- zs
+    next_parameters$zs <- zs
     
     N_1 <- sum(sapply(zs, function(x) x == 1))
     pi <- rbeta(1, a + N_1, b + n - N_1)
-    parameters[[t]]$pi <- pi
+    next_parameters$pi <- pi
     
     y_bar_1 <- sum(data[which(sapply(zs, function(x) x == 1))])
     mu_1 <- rnorm(1, 
                   (m_0 + y_bar_1)/(sigma2 + s2_0*N_1),
                   (s2_0*sigma2)/(sigma2+s2_0*N_1)
     )
-    parameters[[t]]$mu_1 <- mu_1
+    next_parameters$mu_1 <- mu_1
     N_2 <- sum(sapply(zs, function(x) x == 2))
     y_bar_2 <- sum(data[which(sapply(zs, function(x) x == 2))])
     mu_2 <- rnorm(1, 
                   (m_0 + y_bar_2)/(sigma2 + s2_0*N_2),
                   (s2_0*sigma2)/(sigma2+s2_0*N_2)
     )
-    parameters[[t]]$mu_2 <- mu_2
+    next_parameters$mu_2 <- mu_2
 
     alpha_k = alpha_0 + n/2
     beta_k_1 = beta_0 + 1/2 * sum((data-mu_1)^2)
     beta_k_2 = beta_0 + 1/2 * sum((data-mu_2)^2)
     sigma2 = pi * 1/rgamma(1, alpha_k, beta_k_1) + (1-pi) * 1/rgamma(1, alpha_k, beta_k_2)
-    parameters[[t]]$sigma2 <- sigma2
-   
+    next_parameters$sigma2 <- sigma2
+    next_parameters
+}
+
+gibbs_sampler <- function(data, samples_count, m_0, s2_0, a, b, alpha_0, beta_0, burn) {
+  n <- length(data)
+  parameters <- vector(mode="list", length=samples_count)
+  #Initialise prior values from distribution
+  parameters[[1]] <- list(
+    mu_1 = rnorm(1, m_0, s2_0),
+    mu_2 = rnorm(1, m_0, s2_0),
+    pi = rbeta(1, a, b),
+    sigma2 = 1/rgamma(1, alpha_0, beta_0)
+  )
+  parameters[[1]]$zs = rbinom(n, 1, 1-parameters[[1]]$pi) + 1
+  for (t in 2:samples_count) {
+    parameters[[t]] <- iterate_parameters(data, m_0, s2_0, a, b, alpha_0, beta_0, parameters[[t-1]])
   }
   parameters
 }
 ```
 
 ```{r}
-gibbs_sampler(faithful$eruptions, 100, 0, 1, 1, 1, 1, 1, 0)
+results <- gibbs_sampler(faithful$eruptions, 100, 0, 1, 1, 1, 1, 1, 0)
 ```
