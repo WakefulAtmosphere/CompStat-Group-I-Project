@@ -28,8 +28,8 @@ iterate_parameters <- function(data, previous, hyperparams) {
     for (i in 1:n) {
       y_i <- data[i]
       #conditional likelihood for the generated data
-      p_1 <- dnorm(y_i, mu_1, sigma2)*pi/
-        (pi*dnorm(y_i, mu_1, sigma2)+(1-pi)*dnorm(y_i, mu_2, sigma2))
+      p_1 <- dnorm(y_i, mu_1, sqrt(sigma2))*pi/
+        (pi*dnorm(y_i, mu_1, sqrt(sigma2))+(1-pi)*dnorm(y_i, mu_2, sqrt(sigma2)))
       #randomize latent group allocation
       if (runif(1, 0, 1) < p_1) {
         z_i[i] <- 1
@@ -50,8 +50,8 @@ iterate_parameters <- function(data, previous, hyperparams) {
     y_bar_1 <- sum(data[which(sapply(zs, function(x) x == 1))])
     #sample mu_1 from conditional distribution
     mu_1 <- rnorm(1, 
-                  (m_0 + y_bar_1)/(sigma2 + s2_0*N_1),
-                  (s2_0*sigma2)/(sigma2+s2_0*N_1)
+                  mean = (m_0 + y_bar_1)/(sigma2 + s2_0*N_1),
+                  sd = sqrt((s2_0*sigma2)/(sigma2+s2_0*N_1))
     )
     next_parameters$mu_1 <- mu_1
     
@@ -62,16 +62,19 @@ iterate_parameters <- function(data, previous, hyperparams) {
     #sample mu_2 from it's conditional distribution
     mu_2 <- rnorm(1, 
                   (m_0 + y_bar_2)/(sigma2 + s2_0*N_2),
-                  (s2_0*sigma2)/(sigma2+s2_0*N_2)
+                  sqrt((s2_0*sigma2)/(sigma2+s2_0*N_2))
     )
     next_parameters$mu_2 <- mu_2
     
     #calculate parameters for the conditional of sigma^2
     alpha_k = alpha_0 + n/2
-    beta_k_1 = beta_0 + 1/2 * sum((data-mu_1)^2)
-    beta_k_2 = beta_0 + 1/2 * sum((data-mu_2)^2)
+    #beta_k_1 = beta_0 + 1/2 * sum((data-mu_1)^2)
+    #beta_k_2 = beta_0 + 1/2 * sum((data-mu_2)^2)
     #sample from the conditional distribution 
-    sigma2 = pi * 1/rgamma(1, alpha_k, beta_k_1) + (1-pi) * 1/rgamma(1, alpha_k, beta_k_2)
+    #sigma2 = pi * 1/rgamma(1, alpha_k, beta_k_1) + (1-pi) * 1/rgamma(1, alpha_k, beta_k_2)
+    mus = sapply(zs, function(x) x == 1)*mu_1 + sapply(zs, function(x) x == 2)*mu_2
+    beta_k = beta_0 + 1/2 * sum((data-mus)^2)
+    sigma2 = 1/rgamma(1, alpha_k, beta_k)
     next_parameters$sigma2 <- sigma2
     next_parameters
 }
@@ -89,8 +92,8 @@ gibbs_sampler <- function(data, samples_count, burn, hyperparams) {
   
   #Initialise prior values from distribution
   parameters[[1]] <- list(
-    mu_1 = rnorm(1, m_0, s2_0),
-    mu_2 = rnorm(1, m_0, s2_0),
+    mu_1 = rnorm(1, m_0, sqrt(s2_0)),
+    mu_2 = rnorm(1, m_0, sqrt(s2_0)),
     pi = rbeta(1, a, b),
     sigma2 = 1/rgamma(1, alpha_0, beta_0)
   )
@@ -109,7 +112,46 @@ gibbs_sampler <- function(data, samples_count, burn, hyperparams) {
 }
 ```
 
+
+
 ## Simulation study
+
+### setting 1
+a mixture whose two components are clearly separated
+
+```{r}
+#generate a dataset
+
+n<- 100
+allocation = rbinom(n = n, size = 1, prob = 0.7)
+separate_data = allocation*rnorm(n=n, -2, 1) + (1-allocation)*rnorm(n=n, 2, 1)
+
+```
+
+Gibbs
+
+```{r}
+
+hyperparams = list(
+  m_0 = 0,
+  s2_0 = 1,
+  a = 1,
+  b = 1,
+  alpha_0 = 1,
+  beta_0 = 1
+)
+
+separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams)
+```
+
+
+
+```{r}
+plot(separate_gibbs["mu_1"], type = "l", main = "Trace: mu_1")
+acf(separate_gibbs["mu_1"], main = "ACF: mu_1")
+```
+
+
 
 ## Aplication to the faithful dataset
 ```{r}
