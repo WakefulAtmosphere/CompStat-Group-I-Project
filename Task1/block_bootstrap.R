@@ -8,7 +8,7 @@ block_bootstrap <- function(data, B) {
   
   # generate the blocks based on the indices
   # and concatenate into a matrix
-  replicate <- do.call(rbind, lapply(i_s, function(i) {data[i:(i+B), ]}))
+  replicate <- do.call(rbind, lapply(i_s, function(i) {data[i:(i+B-1), ]}))     # -1 because +1 in the sequence where indices are sampled from
   replicate <- replicate[1:n,]    # we keep n first rows - in case n is not divisible by B and we need to cut the last values off
   
   return(replicate)
