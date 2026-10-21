@@ -52,3 +52,52 @@ lags <- 1:5
 Sigma_lags <- autocov_matrices(Z, lags = lags)
 Sigma_lags
 ```
+
+
+
+
+
+
+# Part C
+I tried to draft a function for the ladle quantites, but in the end I just calculated f_0 without a function. I tried to do it so that it would be easy to convert it into a function later on though. It's not very good yet :D
+
+```{r}
+source("diagonalizers.R")
+
+data = Z
+tau = 1
+n_boot = 200
+bootstrap_method = block_bootstrap
+diagonalizer = AMUSE_diagonalizer
+
+
+# we first calculate B_hat 
+# so the first k columns of the diagonalizer computed from the original sample
+B_hat <- diagonalizer(data, tau)
+
+# then we calculate B_star 
+# B_star is an array
+B_star_array <- replicate(n_boot, {
+  X_j <- bootstrap_method(data = timeseries_data, B = 10)
+  B_hat <- diagonalizer(data = timeseries_data)
+})
+
+# then we calculate f_0's for all k = 1, ..., p-1
+# that I didn't do yet but here is the function for one f_0(k)
+
+f_0_k <- function(B_hat, B_star, k) {
+  B_hat_k <- B_hat[, 1:k]
+  B_star_k <- B_star[,1:k,]
+  f_0_k <- mean(apply(B_star_array_k, 3, function(B_star_j_k) {
+    1- abs(det(t(B_hat_k)%*% B_star_j_k))
+    }))
+  return(f_0_k)
+}
+
+
+```
+
+
+
+
+
