@@ -168,6 +168,7 @@ separate_data <- allocation*rnorm(n, -0.5, 1) + (1 - allocation)*rnorm(n, 0.5, 1
 
 ```{r}
 
+source("sampler.R")
 set.seed(1)
 
 hyperparams = list(
@@ -183,7 +184,7 @@ initialisation <- list(
       mu_1    = -1,
       mu_2    = 1,
       pi      = 0.5,
-      sigma2  = 2
+      sigma2  = 1
     )
 
 separate_gibbs_1 = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation)
@@ -207,18 +208,20 @@ par(mfrow=c(2,2))
 
 plot(mu_1_vector, type = "l",
      ylab = expression(mu[1]), 
-     main = expression( paste("Trace: ", mu[1])), col="blue", ylim=c(-2, 2))
+     main = expression( paste("Trace: ", mu[1], " without restriction")), col="blue", ylim=c(-3, 3))
 
-lines(mu_2_vector, type = "l", ylab = expression(mu[2]),
-     main = expression( paste("Trace: ", mu[2])), col="orange")
+lines(mu_2_vector, type = "l", col="orange")
 
 plot(mu_1_vector_2, type = "l", ylab = expression(mu[1]), 
-     main = expression( paste("Trace: ", mu[1])),col="blue", ylim=c(-2, 2))
+     main = expression( paste("Trace: ", mu[1], " with restriction")),col="blue", ylim=c(-3, 3))
 
-lines(mu_2_vector_2, type = "l", ylab = expression(mu[2]),
-     main = expression( paste("Trace: ", mu[2])),col="orange")
-plot(pi_vector, type="l")
-plot(pi_vector_2, type="l")
+lines(mu_2_vector_2, type = "l",col="orange")
+
+plot(pi_vector, type="l", ylab = expression(pi), 
+     main = expression( paste("Trace: ", pi, " without restriction")), ylim=c(0, 1) )
+
+plot(pi_vector_2, type="l", ylab = expression(pi), 
+     main = expression( paste("Trace: ", pi, " with restriction")), ylim=c(0, 1) )
 
 #dev.off()
 
@@ -240,7 +243,7 @@ dev.off()
 
 ```
 
-#### Initialisation $\mu_1 < \mu_2$
+
 
 
 
