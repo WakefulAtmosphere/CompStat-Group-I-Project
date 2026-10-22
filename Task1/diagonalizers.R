@@ -2,9 +2,7 @@ AMUSE_diagonalizer <- function(data, tau = 1) {
   lag_tau_sigma <- autocov_matrices(data, lags = tau)[[1]]
   
   # Symmetrize the lagged matrices
-  lag_tau_sigma_sym <- lapply(Sigma_lags, function(Sigma) {
-    (Sigma + t(Sigma)) / 2
-  })
+  lag_tau_sigma_sym <- (lag_tau_sigma + t(lag_tau_sigma)) / 2
   
   U_tau <- eigen(lag_tau_sigma_sym, symmetric = T)$vectors
   
