@@ -25,7 +25,8 @@ separate_data <- allocation*rnorm(n, -2, 1) + (1 - allocation)*rnorm(n, 2, 1)
 
 ```
 
-#### Initialisation $\mu_1 < \mu_2$
+Initialisation 1: $\mu_1 < \mu_2$.
+Initialisation 2:$\mu_1 > \mu_2$.
 
 ```{r}
 source("sampler.R")
@@ -40,19 +41,32 @@ hyperparams = list(
   beta_0 = 1
 )
 
-initialisation <- list(
+initialisation1 <- list(
       mu_1    = -1,
       mu_2    = 1,
       pi      = 0.5,
       sigma2  = 1
     )
 
-separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation)
+initialisation2 <- list(
+      mu_1    = 1,
+      mu_2    = -1,
+      pi      = 0.5,
+      sigma2  = 1
+    )
 
-mu_1_vector <- sapply(separate_gibbs, function (x) x$mu_1)
-mu_2_vector <- sapply(separate_gibbs, function (x) x$mu_2)
-pi_vector <- sapply(separate_gibbs, function (x) x$pi)
-sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
+separate_gibbs1 = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation1)
+separate_gibbs2 = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation2)
+
+mu_1_vector1 <- sapply(separate_gibbs1, function (x) x$mu_1)
+mu_2_vector1 <- sapply(separate_gibbs1, function (x) x$mu_2)
+pi_vector1 <- sapply(separate_gibbs1, function (x) x$pi)
+sigma2_vector1 <- sapply(separate_gibbs1, function (x) x$sigma2)
+
+mu_1_vector2 <- sapply(separate_gibbs2, function (x) x$mu_1)
+mu_2_vector2 <- sapply(separate_gibbs2, function (x) x$mu_2)
+pi_vector2 <- sapply(separate_gibbs2, function (x) x$pi)
+sigma2_vector2 <- sapply(separate_gibbs2, function (x) x$sigma2)
 
 ```
 
@@ -60,21 +74,41 @@ sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
 
 ```{r}
 
-png(file="./figures/task2_partB_setting1_init1_trace.png")
+png(file="./figures/task2_partB_setting1_trace.png")
 
 par(mfrow=c(2,2))
 
-plot(mu_1_vector, type = "l", ylab = expression(mu[1]), 
-     main = expression( paste("Trace: ", mu[1])))
+plot(mu_1_vector1, type = "l", ylab = expression(mu[1]), ylim = c(-3,3), 
+     main = expression( paste("Trace: ", mu[1])), col="blue")
 
-plot(mu_2_vector, type = "l", ylab = expression(mu[2]),
-     main = expression( paste("Trace: ", mu[2])))
+lines(mu_1_vector2, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])), col="orange")
 
-plot(pi_vector, type = "l", ylab = expression(pi), 
-     main = expression( paste("Trace: ", pi)))
+plot(mu_2_vector1, type = "l", ylab = expression(mu[2]), ylim = c(-3,3),
+     main = expression( paste("Trace: ", mu[2])) , col="blue")
 
-plot(sigma2_vector, type = "l", ylab = expression(sigma^2), 
-     main = expression( paste("Trace: ", sigma^2)))
+lines(mu_2_vector2, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])), col="orange")
+
+legend("topright",
+       legend = c(
+         expression( paste("Initial ", mu[1], "<",  mu[2])), 
+         expression( paste("Initial ", mu[1], ">",  mu[2]))),
+       col = c("blue", "orange"),
+       lty = 1,
+       cex = 0.8)
+
+plot(pi_vector1, type = "l", ylab = expression(pi), ylim = c(0,1),
+     main = expression( paste("Trace: ", pi)), col="blue")
+
+lines(pi_vector2, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])), col="orange")
+
+plot(sigma2_vector1, type = "l", ylab = expression(sigma^2),
+     main = expression( paste("Trace: ", sigma^2)), col="blue")
+
+lines(sigma2_vector2, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])), col="orange")
 
 
 dev.off()
@@ -92,50 +126,6 @@ acf(mu_1_vector, main = expression( paste("ACF: ", mu[1])))
 acf(mu_2_vector, main = expression( paste("ACF: ", mu[2])))
 acf(pi_vector, main = expression( paste("ACF: ", pi)))
 acf(sigma2_vector, main = expression( paste("ACF: ", sigma^2)))
-
-dev.off()
-
-```
-
-#### Initialisation $\mu_1 > \mu_2$
-
-```{r}
-initialisation <- list(
-      mu_1    = 1,
-      mu_2    = -1,
-      pi      = 0.5,
-      sigma2  = 1
-    )
-
-separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation)
-
-mu_1_vector <- sapply(separate_gibbs, function (x) x$mu_1)
-mu_2_vector <- sapply(separate_gibbs, function (x) x$mu_2)
-pi_vector <- sapply(separate_gibbs, function (x) x$pi)
-sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
-
-```
-
-
-
-```{r}
-
-png(file="./figures/task2_partB_setting1_init2_trace.png")
-
-par(mfrow=c(2,2))
-
-plot(mu_1_vector, type = "l", ylab = expression(mu[1]), 
-     main = expression( paste("Trace: ", mu[1])))
-
-plot(mu_2_vector, type = "l", ylab = expression(mu[2]),
-     main = expression( paste("Trace: ", mu[2])))
-
-plot(pi_vector, type = "l", ylab = expression(pi), 
-     main = expression( paste("Trace: ", pi)))
-
-plot(sigma2_vector, type = "l", ylab = expression(sigma^2), 
-     main = expression( paste("Trace: ", sigma^2)))
-
 
 dev.off()
 
@@ -215,7 +205,8 @@ sigma2_vector <- sapply(separate_gibbs_1, function (x) x$sigma2)
 
 par(mfrow=c(2,2))
 
-plot(mu_1_vector, type = "l", ylab = expression(mu[1]), 
+plot(mu_1_vector, type = "l",
+     ylab = expression(mu[1]), 
      main = expression( paste("Trace: ", mu[1])), col="blue", ylim=c(-2, 2))
 
 lines(mu_2_vector, type = "l", ylab = expression(mu[2]),
