@@ -72,26 +72,42 @@ diagonalizer = AMUSE_diagonalizer
 
 # we first calculate B_hat 
 # so the first k columns of the diagonalizer computed from the original sample
-B_hat <- diagonalizer(data, tau)
+B_hat <- diagonalizer(data, tau)$u_tau
 
 # then we calculate B_star 
 # B_star is an array
 B_star_array <- replicate(n_boot, {
-  X_j <- bootstrap_method(data = timeseries_data, B = 10)
-  B_hat <- diagonalizer(data = timeseries_data)
+  X_j <- bootstrap_method(data = data, B = 10)
+  B_hat <- diagonalizer(data = data)$u_tau
 })
 
-# then we calculate f_0's for all k = 1, ..., p-1
-# that I didn't do yet but here is the function for one f_0(k)
 
+# function for one f_0(k)
 f_0_k <- function(B_hat, B_star, k) {
-  B_hat_k <- B_hat[, 1:k]
-  B_star_k <- B_star[,1:k,]
-  f_0_k <- mean(apply(B_star_array_k, 3, function(B_star_j_k) {
+  B_hat_k <- B_hat[, 1:k, drop = FALSE]
+  B_star_k <- B_star[,1:k, ,drop = FALSE]
+  # apply goes through bootstrap samples and calculates mean across them 
+  f_0_k <- mean(apply(B_star_k, 3, function(B_star_j_k) {
     1- abs(det(t(B_hat_k)%*% B_star_j_k))
     }))
   return(f_0_k)
 }
+
+
+# we calculate f_0's for all k = 1, ..., p-1
+# where p is the number of variables
+f_0 <- numeric(p)   # not p-1 because the sum starts form zero
+for (k in seq(1, p-1)){
+   f_0[k] <- f_0_k(B_hat, B_star_array, k)
+}
+
+# täää on vielä tosi huono!!!! Pitäis laittaa ehk data kans funkitokutsuun 
+# tai sitten siirtää f_0_k sinne sisään
+f_k <- function(k) {
+  f_0_k(B_hat, B_star_array, k) /(1 + sum(f_0))
+}
+
+f_k(2)
 
 
 ```
