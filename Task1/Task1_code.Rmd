@@ -7,6 +7,7 @@ source("autocov.R")
 source("block_bootstrap.R")
 source("stationary_bootstrap.R")
 source("diagonalizers.R")
+install.packages("JADE")
 ```
 
 # Part A
