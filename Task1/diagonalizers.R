@@ -7,8 +7,15 @@ AMUSE_diagonalizer <- function(data, tau = 1) {
   })
   
   U_tau <- eigen(lag_tau_sigma_sym, symmetric = T)$vectors
-  B_hat <- U_tau  # doesn't do anything, but I think it might be good for clarity for when we code the SOBI estimator B_hat
-  return(B_hat)
+  
+  # Calculate the AMUSE unmixing matrix
+  Lambda <- diag(t(U_tau) %*% lag_tau_sigma_sym %*% U_tau)
+  Lambda <- Lambda^2
+
+  list(
+    u_tau = U_tau,
+    lambda = Lambda
+  )
 }
 
 SOBI_diagonalizer <- function(data, lags){
@@ -24,5 +31,19 @@ SOBI_diagonalizer <- function(data, lags){
   }
   
   # Joint diagonalization
-  JADE::rjd(Sigma_array)$V
+  U_TAU <- JADE::rjd(Sigma_array)$V
+  
+  # Calculate the unmixing matrix
+  Lambda <- numeric(p)
+  
+  for (k in seq_along(Sigma_lags)) {
+    Sigma_tau <- Sigma_lags[[k]]
+    Lambda <- Lambda + 
+      diag(t(U_TAU) %*% Sigma_tau %*% U_TAU)^2
+  }
+
+  list(
+    u_tau = U_TAU,
+    lambda = Lambda
+  )
 }
