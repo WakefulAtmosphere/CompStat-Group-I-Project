@@ -4,6 +4,11 @@ output: pdf_document
 date: "2026-10-20"
 ---
 
+```{r}
+set.seed(1)
+```
+
+
 ## Gibbs sampler implementation
 
 ```{r}
@@ -152,9 +157,10 @@ hyperparams = list(
   s2_0 = 1,
   a = 1,
   b = 1,
-  alpha_0 = 1,
+  alpha_0 = 2,
   beta_0 = 1
 )
+
 initilasation <- list(
       mu_1    = 1,
       mu_2    = 1,
@@ -175,7 +181,7 @@ sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
 
 ```{r}
 
-#png(file="./figures/task2_partB_setting1_trace.png")
+png(file="./figures/task2_partB_setting1_trace.png")
 
 par(mfrow=c(2,2))
 
@@ -186,7 +192,7 @@ plot(pi_vector, type = "l", main = "Trace: pi")
 plot(sigma2_vector, type = "l", main = "Trace: sigma2")
 
 
-#dev.off()
+dev.off()
 
 ```
 
