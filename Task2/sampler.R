@@ -1,6 +1,6 @@
 ## Gibbs sampler implementation
 
-iterate_parameters <- function(data, previous, hyperparams) {
+iterate_parameters <- function(data, previous, hyperparams, allow_switching) {
   next_parameters <- list()
   n <- length(data)
   
@@ -51,18 +51,22 @@ iterate_parameters <- function(data, previous, hyperparams) {
   pi <- rbeta(1, a + N_1, b + n - N_1)
   next_parameters$pi <- pi
   
-  #sample mu_1 from conditional distribution
+  #sample mus from conditional distribution
   mu_1 <- rnorm(1, 
                 mean = (m_0 + y_sum_1)/(sigma2 + s2_0*N_1),
                 sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_1))
   )
-  next_parameters$mu_1 <- mu_1
-  
-  #sample mu_2 from it's conditional distribution
   mu_2 <- rnorm(1, 
                 mean = (m_0 + y_sum_2)/(sigma2 + s2_0*N_2),
                 sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_2))
   )
+  #Enforce mu_1 < mu_2 if label switching is prevented
+  if (!allow_switching && mu_1 >= mu_2) {
+    placeholder <- mu_1
+    mu_1 <- mu_2
+    mu_2 <- placeholder
+  }
+  next_parameters$mu_1 <- mu_1
   next_parameters$mu_2 <- mu_2
   
   #calculate parameters for the conditional of sigma^2
@@ -81,7 +85,7 @@ iterate_parameters <- function(data, previous, hyperparams) {
   next_parameters
 }
 
-gibbs_sampler <- function(data, samples_count, burn, hyperparams, initialisation=NA) {
+gibbs_sampler <- function(data, samples_count, burn, hyperparams, initialisation=NA, allow_switching = TRUE) {
   n <- length(data)
   parameters <- vector(mode="list", length=samples_count)
   
@@ -93,12 +97,12 @@ gibbs_sampler <- function(data, samples_count, burn, hyperparams, initialisation
   #Burn just replaces the first value repeatedly, thus discarding the previous value
   for (t in 1:burn) {
     previous <- parameters[[1]]
-    parameters[[1]] <- iterate_parameters(data, previous, hyperparams)
+    parameters[[1]] <- iterate_parameters(data, previous, hyperparams, allow_switching)
   }
   #generate samples
   for (t in 2:samples_count) {
     previous <- parameters[[t-1]]
-    parameters[[t]] <- iterate_parameters(data, previous, hyperparams)
+    parameters[[t]] <- iterate_parameters(data, previous, hyperparams, allow_switching)
   }
   parameters
 }

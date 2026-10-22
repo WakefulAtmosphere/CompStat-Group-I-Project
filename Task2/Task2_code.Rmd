@@ -195,12 +195,16 @@ initialisation <- list(
       sigma2  = 2
     )
 
-separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation)
+separate_gibbs_1 = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation)
+separate_gibbs_2 = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation, allow_switching=FALSE)
 
-mu_1_vector <- sapply(separate_gibbs, function (x) x$mu_1)
-mu_2_vector <- sapply(separate_gibbs, function (x) x$mu_2)
-pi_vector <- sapply(separate_gibbs, function (x) x$pi)
-sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
+mu_1_vector <- sapply(separate_gibbs_1, function (x) x$mu_1)
+mu_2_vector <- sapply(separate_gibbs_1, function (x) x$mu_2)
+mu_1_vector_2 <- sapply(separate_gibbs_2, function (x) x$mu_1)
+mu_2_vector_2 <- sapply(separate_gibbs_2, function (x) x$mu_2)
+pi_vector <- sapply(separate_gibbs_1, function (x) x$pi)
+pi_vector_2 <- sapply(separate_gibbs_2, function (x) x$pi)
+sigma2_vector <- sapply(separate_gibbs_1, function (x) x$sigma2)
 
 ```
 
@@ -211,16 +215,19 @@ png(file="./figures/task2_partB_setting2_init1_trace.png")
 par(mfrow=c(2,2))
 
 plot(mu_1_vector, type = "l", ylab = expression(mu[1]), 
-     main = expression( paste("Trace: ", mu[1])))
+     main = expression( paste("Trace: ", mu[1])), col="blue", ylim=c(-2, 2))
 
-plot(mu_2_vector, type = "l", ylab = expression(mu[2]),
-     main = expression( paste("Trace: ", mu[2])))
+lines(mu_2_vector, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])), col="orange")
 
-plot(pi_vector, type = "l", ylab = expression(pi), 
-     main = expression( paste("Trace: ", pi)))
+plot(mu_1_vector_2, type = "l", ylab = expression(mu[1]), 
+     main = expression( paste("Trace: ", mu[1])),col="blue", ylim=c(-2, 2))
 
-plot(sigma2_vector, type = "l", ylab = expression(sigma^2), 
-     main = expression( paste("Trace: ", sigma^2)))
+lines(mu_2_vector_2, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])),col="orange")
+plot(pi_vector, type="l")
+plot(pi_vector_2, type="l")
+plot()
 
 dev.off()
 
