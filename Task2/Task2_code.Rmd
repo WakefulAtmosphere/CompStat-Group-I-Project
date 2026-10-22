@@ -4,9 +4,7 @@ output: pdf_document
 date: "2026-10-20"
 ---
 
-```{r}
-set.seed(1)
-```
+
 
 
 ## Gibbs sampler implementation
@@ -137,10 +135,13 @@ gibbs_sampler <- function(data, samples_count, burn, hyperparams, initialisation
 ## Simulation study
 
 ### setting 1
-a mixture whose two components are clearly separated
+
+a mixture whose two components are clearly separated. 
 
 ```{r}
 #generate a dataset
+
+set.seed(1)
 
 n <- 100
 allocation <- rbinom(n, size = 1, prob = 0.7)
@@ -148,9 +149,10 @@ separate_data <- allocation*rnorm(n, -2, 1) + (1 - allocation)*rnorm(n, 2, 1)
 
 ```
 
-Gibbs
+#### Initialisation $\mu_1 < \mu_2$
 
 ```{r}
+set.seed(1)
 
 hyperparams = list(
   m_0 = 0,
@@ -181,25 +183,31 @@ sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
 
 ```{r}
 
-png(file="./figures/task2_partB_setting1_trace.png")
+#png(file="./figures/task2_partB_setting1_init1_trace.png")
 
 par(mfrow=c(2,2))
 
-plot(mu_1_vector, type = "l", main = "Trace: mu_1")
-plot(mu_2_vector, type = "l", main = "Trace: mu_2")
+plot(mu_1_vector, type = "l", ylab = expression(mu[1]), 
+     main = expression( paste("Trace: ", mu[1])))
 
-plot(pi_vector, type = "l", main = "Trace: pi")
-plot(sigma2_vector, type = "l", main = "Trace: sigma2")
+plot(mu_2_vector, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])))
+
+plot(pi_vector, type = "l", ylab = expression(pi), 
+     main = expression( paste("Trace: ", pi)))
+
+plot(sigma2_vector, type = "l", ylab = expression(sigma^2), 
+     main = expression( paste("Trace: ", sigma^2)))
 
 
-dev.off()
+#dev.off()
 
 ```
 
 
 ```{r}
 
-png(file="./figures/task2_partB_setting1_acf.png")
+png(file="./figures/task2_partB_setting1_init1_acf.png")
 
 par(mfrow=c(2,2))
 
@@ -211,29 +219,9 @@ acf(sigma2_vector, main = "ACF: sigma2")
 dev.off()
 
 ```
-### setting 2
+#### Initialisation $\mu_1 > \mu_2$
 
 ```{r}
-#generate a dataset
-
-n <- 100
-allocation <- rbinom(n, size = 1, prob = 0.7)
-separate_data <- allocation*rnorm(n, -0.5, 1) + (1 - allocation)*rnorm(n, 0.5, 1)
-
-```
-
-Gibbs
-
-```{r}
-
-hyperparams = list(
-  m_0 = 0,
-  s2_0 = 1,
-  a = 1,
-  b = 1,
-  alpha_0 = 1,
-  beta_0 = 1
-)
 initilasation <- list(
       mu_1    = 1,
       mu_2    = 1,
@@ -250,17 +238,26 @@ sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
 
 ```
 
+
+
 ```{r}
 
-png(file="./figures/task2_partB_setting2_trace.png")
+png(file="./figures/task2_partB_setting1_init2_trace.png")
 
 par(mfrow=c(2,2))
 
-plot(mu_1_vector, type = "l", main = "Trace: mu_1")
-plot(mu_2_vector, type = "l", main = "Trace: mu_2")
+plot(mu_1_vector, type = "l", ylab = expression(mu[1]), 
+     main = expression( paste("Trace: ", mu[1])))
 
-plot(pi_vector, type = "l", main = "Trace: pi")
-plot(sigma2_vector, type = "l", main = "Trace: sigma2")
+plot(mu_2_vector, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])))
+
+plot(pi_vector, type = "l", ylab = expression(pi), 
+     main = expression( paste("Trace: ", pi)))
+
+plot(sigma2_vector, type = "l", ylab = expression(sigma^2), 
+     main = expression( paste("Trace: ", sigma^2)))
+
 
 dev.off()
 
@@ -269,7 +266,7 @@ dev.off()
 
 ```{r}
 
-png(file="./figures/task2_partB_setting2_acf.png")
+png(file="./figures/task2_partB_setting1_init2_acf.png")
 
 par(mfrow=c(2,2))
 
@@ -283,9 +280,100 @@ dev.off()
 ```
 
 
+### setting 2
+
+A mixture whose not clearly separated
+
+```{r}
+
+#generate a dataset
+
+set.seed(1)
+
+n <- 100
+allocation <- rbinom(n, size = 1, prob = 0.7)
+separate_data <- allocation*rnorm(n, -0.5, 1) + (1 - allocation)*rnorm(n, 0.5, 1)
+
+```
+
+#### Initialisation $\mu_1 < \mu_2$
+
+```{r}
+
+set.seed(1)
+
+hyperparams = list(
+  m_0 = 0,
+  s2_0 = 1,
+  a = 1,
+  b = 1,
+  alpha_0 = 1,
+  beta_0 = 1
+)
+
+initilasation <- list(
+      mu_1    = 1,
+      mu_2    = 1,
+      pi      = 0.5,
+      sigma2  = 2
+    )
+
+separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation = initilasation)
+
+mu_1_vector <- sapply(separate_gibbs, function (x) x$mu_1)
+mu_2_vector <- sapply(separate_gibbs, function (x) x$mu_2)
+pi_vector <- sapply(separate_gibbs, function (x) x$pi)
+sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
+
+```
+
+```{r}
+
+png(file="./figures/task2_partB_setting2_init1_trace.png")
+
+par(mfrow=c(2,2))
+
+plot(mu_1_vector, type = "l", ylab = expression(mu[1]), 
+     main = expression( paste("Trace: ", mu[1])))
+
+plot(mu_2_vector, type = "l", ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])))
+
+plot(pi_vector, type = "l", ylab = expression(pi), 
+     main = expression( paste("Trace: ", pi)))
+
+plot(sigma2_vector, type = "l", ylab = expression(sigma^2), 
+     main = expression( paste("Trace: ", sigma^2)))
+
+dev.off()
+
+```
+
+
+```{r}
+
+png(file="./figures/task2_partB_setting2_init1_acf.png")
+
+par(mfrow=c(2,2))
+
+acf(mu_1_vector, main = "ACF: mu_1")
+acf(mu_2_vector, main = "ACF: mu_2")
+acf(pi_vector, main = "ACF: pi")
+acf(sigma2_vector, main = "ACF: sigma2")
+
+dev.off()
+
+```
+
+#### Initialisation $\mu_1 < \mu_2$
+
+
+
+
 
 ## Aplication to the faithful dataset
 ```{r}
+
 hyperparams = list(
   m_0 = 0,
   s2_0 = 1,
@@ -302,6 +390,7 @@ preprocessed_data <- (faithful$eruptions - mean)/ std
 ```
 
 ```{r}
+set.seed(1)
 gibbs_sampler(preprocessed_data, 100, 100, hyperparams)
 ```
 
