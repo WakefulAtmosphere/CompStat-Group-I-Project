@@ -1,5 +1,5 @@
-AMUSE_diagonalizer <- function(data, tau = 1) {
-  lag_tau_sigma <- autocov_matrices(data, lags = tau)[[1]]
+AMUSE_diagonalizer <- function(data, lags = 1) {
+  lag_tau_sigma <- autocov_matrices(data, lags = lags)[[1]]
   
   # Symmetrize the lagged matrices
   lag_tau_sigma_sym <- (lag_tau_sigma + t(lag_tau_sigma)) / 2
@@ -45,3 +45,33 @@ SOBI_diagonalizer <- function(data, lags){
     lambda = Lambda
   )
 }
+
+
+diagonalizer <- function(data,
+                         lags = 1,
+                         n_boot = 200,
+                         bootstrap_method = block_bootstrap,
+                         diagonalizer = AMUSE_diagonalizer) {
+  res <- diagonalizer(data, lags)
+  
+  # then we calculate B_star 
+  # B_star is an array
+  B_star_array <- replicate(n_boot, {
+    X_j <- bootstrap_method(data = data, B = 10)
+    B_hat <- diagonalizer(data = data, lags)$u_tau
+  })
+  
+  list(
+    B_hat = res$u_tau, 
+    B_star = B_star_array,
+    lambda = Lambda
+  )
+}
+
+
+
+
+
+
+
+
