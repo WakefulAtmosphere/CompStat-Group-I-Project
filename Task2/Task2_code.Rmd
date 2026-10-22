@@ -175,6 +175,8 @@ sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
 
 ```{r}
 
+#png(file="./figures/task2_partB_setting1_trace.png")
+
 par(mfrow=c(2,2))
 
 plot(mu_1_vector, type = "l", main = "Trace: mu_1")
@@ -182,16 +184,25 @@ plot(mu_2_vector, type = "l", main = "Trace: mu_2")
 
 plot(pi_vector, type = "l", main = "Trace: pi")
 plot(sigma2_vector, type = "l", main = "Trace: sigma2")
+
+
+#dev.off()
+
 ```
 
 
 ```{r}
+
+png(file="./figures/task2_partB_setting1_acf.png")
+
 par(mfrow=c(2,2))
 
 acf(mu_1_vector, main = "ACF: mu_1")
 acf(mu_2_vector, main = "ACF: mu_2")
 acf(pi_vector, main = "ACF: pi")
 acf(sigma2_vector, main = "ACF: sigma2")
+
+dev.off()
 
 ```
 ### setting 2
@@ -235,6 +246,8 @@ sigma2_vector <- sapply(separate_gibbs, function (x) x$sigma2)
 
 ```{r}
 
+png(file="./figures/task2_partB_setting2_trace.png")
+
 par(mfrow=c(2,2))
 
 plot(mu_1_vector, type = "l", main = "Trace: mu_1")
@@ -242,16 +255,24 @@ plot(mu_2_vector, type = "l", main = "Trace: mu_2")
 
 plot(pi_vector, type = "l", main = "Trace: pi")
 plot(sigma2_vector, type = "l", main = "Trace: sigma2")
+
+dev.off()
+
 ```
 
 
 ```{r}
+
+png(file="./figures/task2_partB_setting2_acf.png")
+
 par(mfrow=c(2,2))
 
 acf(mu_1_vector, main = "ACF: mu_1")
 acf(mu_2_vector, main = "ACF: mu_2")
 acf(pi_vector, main = "ACF: pi")
 acf(sigma2_vector, main = "ACF: sigma2")
+
+dev.off()
 
 ```
 
