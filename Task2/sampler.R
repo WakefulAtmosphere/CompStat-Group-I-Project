@@ -81,31 +81,15 @@ iterate_parameters <- function(data, previous, hyperparams) {
   next_parameters
 }
 
-gibbs_sampler <- function(data, samples_count, burn, hyperparams, initialisation = NA) {
+gibbs_sampler <- function(data, samples_count, burn, hyperparams, initialisation=NA) {
   n <- length(data)
   parameters <- vector(mode="list", length=samples_count)
   
-  m_0     <- hyperparams$m_0
-  s2_0    <- hyperparams$s2_0
-  a       <- hyperparams$a
-  b       <- hyperparams$b
-  alpha_0 <- hyperparams$alpha_0
-  beta_0  <- hyperparams$beta_0
+  if (any(is.na(initialisation))) {
+    initialisation <- sample_initial_params(hyperparams)
+  }
+  parameters[[1]] <- initialisation
   
-  #Initialise prior values from distribution
-  if (!any(is.na(initialisation))){
-    parameters[[1]] <- initialisation
-  }
-  else {
-    parameters[[1]] <- list(
-      mu_1    = rnorm(1, m_0, sqrt(s2_0)),
-      mu_2    = rnorm(1, m_0, sqrt(s2_0)),
-      pi      = rbeta(1, a, b),
-      sigma2  = 1/rgamma(1, alpha_0, beta_0)
-    )
-    
-  }
-  parameters[[1]]$zs = rbinom(n, 1, 1-parameters[[1]]$pi) + 1
   #Burn just replaces the first value repeatedly, thus discarding the previous value
   for (t in 1:burn) {
     previous <- parameters[[1]]
@@ -116,5 +100,22 @@ gibbs_sampler <- function(data, samples_count, burn, hyperparams, initialisation
     previous <- parameters[[t-1]]
     parameters[[t]] <- iterate_parameters(data, previous, hyperparams)
   }
+  parameters
+}
+
+sample_initial_params <- function(hyperparams) {
+  m_0     <- hyperparams$m_0
+  s2_0    <- hyperparams$s2_0
+  a       <- hyperparams$a
+  b       <- hyperparams$b
+  alpha_0 <- hyperparams$alpha_0
+  beta_0  <- hyperparams$beta_0
+  parameters <- list(
+    mu_1    = rnorm(1, m_0, sqrt(s2_0)),
+    mu_2    = rnorm(1, m_0, sqrt(s2_0)),
+    pi      = rbeta(1, a, b),
+    sigma2  = 1/rgamma(1, alpha_0, beta_0)
+  )
+  parameters$zs = rbinom(n, 1, 1-parameters$pi) + 1
   parameters
 }

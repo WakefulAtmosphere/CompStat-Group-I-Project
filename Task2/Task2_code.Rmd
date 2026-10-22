@@ -40,14 +40,14 @@ hyperparams = list(
   beta_0 = 1
 )
 
-initilasation <- list(
+initialisation <- list(
       mu_1    = 1,
       mu_2    = 1,
       pi      = 0.5,
       sigma2  = 1
     )
 
-separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation = initilasation)
+separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation)
 
 mu_1_vector <- sapply(separate_gibbs, function (x) x$mu_1)
 mu_2_vector <- sapply(separate_gibbs, function (x) x$mu_2)
@@ -99,14 +99,14 @@ dev.off()
 #### Initialisation $\mu_1 > \mu_2$
 
 ```{r}
-initilasation <- list(
+initialisation <- list(
       mu_1    = 1,
       mu_2    = 1,
       pi      = 0.5,
       sigma2  = 1
     )
 
-separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation = initilasation)
+separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation)
 
 mu_1_vector <- sapply(separate_gibbs, function (x) x$mu_1)
 mu_2_vector <- sapply(separate_gibbs, function (x) x$mu_2)
@@ -188,14 +188,14 @@ hyperparams = list(
   beta_0 = 1
 )
 
-initilasation <- list(
+initialisation <- list(
       mu_1    = 1,
       mu_2    = 1,
       pi      = 0.5,
       sigma2  = 2
     )
 
-separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation = initilasation)
+separate_gibbs = gibbs_sampler(separate_data, 2000, 2000, hyperparams, initialisation)
 
 mu_1_vector <- sapply(separate_gibbs, function (x) x$mu_1)
 mu_2_vector <- sapply(separate_gibbs, function (x) x$mu_2)
@@ -268,10 +268,5 @@ preprocessed_data <- (faithful$eruptions - mean)/ std
 
 ```{r}
 set.seed(1)
-gibbs_sampler(preprocessed_data, 100, 100, hyperparams)
+faithful_gibbs <- gibbs_sampler(preprocessed_data, 100, 100, hyperparams)
 ```
-
-```{r}
-
-```
-
