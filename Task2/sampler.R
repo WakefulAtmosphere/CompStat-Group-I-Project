@@ -1,0 +1,120 @@
+## Gibbs sampler implementation
+
+iterate_parameters <- function(data, previous, hyperparams) {
+  next_parameters <- list()
+  n <- length(data)
+  
+  m_0     <- hyperparams$m_0
+  s2_0    <- hyperparams$s2_0
+  a       <- hyperparams$a
+  b       <- hyperparams$b
+  alpha_0 <- hyperparams$alpha_0
+  beta_0  <- hyperparams$beta_0
+  
+  mu_1    <- previous$mu_1
+  mu_2    <- previous$mu_2
+  pi      <- previous$pi
+  sigma2  <- previous$sigma2
+  zs      <- previous$zs
+  
+  #Latent group allocation for each data point separately
+  z_i <- numeric(n)
+  for (i in 1:n) {
+    y_i <- data[i]
+    #conditional likelihood for the generated data; probability that Z_i equals 1.
+    p_1 <- dnorm(y_i, mu_1, sqrt(sigma2))*pi/
+      (pi*dnorm(y_i, mu_1, sqrt(sigma2))+(1-pi)*dnorm(y_i, mu_2, sqrt(sigma2)))
+    #randomize latent group allocation
+    if (runif(1, 0, 1) < p_1) {
+      z_i[i] <- 1
+    } else {
+      z_i[i] <- 2
+    }
+  }
+  #save result
+  zs <- z_i
+  next_parameters$zs <- zs
+  
+  #split observations into groups by allocation parameter
+  is_group_1   <- sapply(zs, function(x) x == 1) #vector which tells if a datum is in group 1
+  is_group_2   <- !is_group_1
+  group_1_data <- data[which(is_group_1)]
+  group_2_data <- data[which(is_group_2)]
+  
+  #count observations in each group, and take their sums
+  N_1 <- length(group_1_data)
+  N_2 <- length(group_2_data)
+  y_sum_1 <- sum(group_1_data)
+  y_sum_2 <- sum(group_2_data)
+  
+  #sample from the conditional likelihood of group allocation parameter pi
+  pi <- rbeta(1, a + N_1, b + n - N_1)
+  next_parameters$pi <- pi
+  
+  #sample mu_1 from conditional distribution
+  mu_1 <- rnorm(1, 
+                mean = (m_0 + y_sum_1)/(sigma2 + s2_0*N_1),
+                sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_1))
+  )
+  next_parameters$mu_1 <- mu_1
+  
+  #sample mu_2 from it's conditional distribution
+  mu_2 <- rnorm(1, 
+                mean = (m_0 + y_sum_2)/(sigma2 + s2_0*N_2),
+                sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_2))
+  )
+  next_parameters$mu_2 <- mu_2
+  
+  #calculate parameters for the conditional of sigma^2
+  #this needs cleanup later
+  alpha_k <- alpha_0 + n/2
+  #beta_k_1 = beta_0 + 1/2 * sum((data-mu_1)^2)
+  #beta_k_2 = beta_0 + 1/2 * sum((data-mu_2)^2)
+  #sample from the conditional distribution 
+  #sigma2 = pi * 1/rgamma(1, alpha_k, beta_k_1) + (1-pi) * 1/rgamma(1, alpha_k, beta_k_2)
+  mus <- is_group_1*mu_1 + is_group_2*mu_2
+  beta_k <- beta_0 + 1/2 * sum((data-mus)^2)
+  
+  sigma2 <- 1/rgamma(1, alpha_k, beta_k)
+  next_parameters$sigma2 <- sigma2
+  
+  next_parameters
+}
+
+gibbs_sampler <- function(data, samples_count, burn, hyperparams, initialisation = NA) {
+  n <- length(data)
+  parameters <- vector(mode="list", length=samples_count)
+  
+  m_0     <- hyperparams$m_0
+  s2_0    <- hyperparams$s2_0
+  a       <- hyperparams$a
+  b       <- hyperparams$b
+  alpha_0 <- hyperparams$alpha_0
+  beta_0  <- hyperparams$beta_0
+  
+  #Initialise prior values from distribution
+  if (!any(is.na(initialisation))){
+    parameters[[1]] <- initialisation
+  }
+  else {
+    parameters[[1]] <- list(
+      mu_1    = rnorm(1, m_0, sqrt(s2_0)),
+      mu_2    = rnorm(1, m_0, sqrt(s2_0)),
+      pi      = rbeta(1, a, b),
+      sigma2  = 1/rgamma(1, alpha_0, beta_0)
+    )
+    
+  }
+  parameters[[1]]$zs = rbinom(n, 1, 1-parameters[[1]]$pi) + 1
+  #Burn just replaces the first value repeatedly, thus discarding the previous value
+  for (t in 1:burn) {
+    previous <- parameters[[1]]
+    parameters[[1]] <- iterate_parameters(data, previous, hyperparams)
+  }
+  #generate samples
+  for (t in 2:samples_count) {
+    previous <- parameters[[t-1]]
+    parameters[[t]] <- iterate_parameters(data, previous, hyperparams)
+  }
+  parameters
+}
