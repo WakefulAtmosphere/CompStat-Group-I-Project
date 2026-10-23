@@ -1,13 +1,15 @@
-stationary_bootstrap <- function(X, p) {
-  n <- nrow(X)
+stationary_bootstrap <- function(data, B) {
+  n <- nrow(data)
   
   if (n < 1) {
     stop("X must contain at least one observation.")
   }
   
-  if (p < 0 || p > 1) {
-    stop("p must be between 0 and 1.")
+  if (B <= 0) {
+    stop("Expected block size must be greater than 0.")
   }
+  
+  p <- 1 / B
   
   # Store the original time indices selected
   index <- integer(n)
@@ -28,6 +30,6 @@ stationary_bootstrap <- function(X, p) {
     }
   }
   # Resample entire rows
-  X_boot <- X[index, , drop = FALSE]
+  X_boot <- data[index, , drop = FALSE]
   X_boot
 }
