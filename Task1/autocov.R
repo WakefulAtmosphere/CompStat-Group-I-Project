@@ -17,11 +17,7 @@ autocov_matrices <- function(Z, lags) {
     Z_future <- Z[(tau + 1):n, , drop = FALSE]
     
     # Estimate E[z_t z_(t+tau)^T]
-    # crossprod calculates Z_t^T Z_t+tau, which is a p x p matrix
-    # Corresponds to the estimate presented in the paper for matrices with
-    # observations as rows
-    Sigma_lags[[i]] <- crossprod(Z_t, Z_future) /
-      (n - tau)
+    Sigma_lags[[i]] <- cov(Z_t, Z_future)
   }
   
   Sigma_lags
