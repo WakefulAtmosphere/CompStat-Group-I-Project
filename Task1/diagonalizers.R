@@ -33,7 +33,11 @@ SOBI_diagonalizer <- function(data, lags){
   }
   
   # Joint diagonalization
-  U_TAU <- JADE::rjd(Sigma_array)$V
+  U_TAU <- JADE::rjd(
+    Sigma_array,
+    maxiter = 1000,
+    eps = 1e-6
+    )$V
   
   # Calculate the unmixing matrix
   Lambda <- numeric(p)
