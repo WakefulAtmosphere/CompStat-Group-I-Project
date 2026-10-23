@@ -387,6 +387,20 @@ hyperparams = list(
   beta_0 = 1
 )
 
+initialisation1 <- list(
+      mu_1    = -1,
+      mu_2    = 1,
+      pi      = 0.5,
+      sigma2  = 1
+    )
+
+initialisation2 <- list(
+      mu_1    = 3,
+      mu_2    = 5,
+      pi      = 0.8,
+      sigma2  = 2
+    )
+
 mean <- mean(faithful$eruptions)
 std <- sd(faithful$eruptions)
 preprocessed_data <- (faithful$eruptions - mean)/ std
@@ -394,6 +408,73 @@ preprocessed_data <- (faithful$eruptions - mean)/ std
 ```
 
 ```{r}
-set.seed(1)
-faithful_gibbs <- gibbs_sampler(preprocessed_data, 100, 100, hyperparams)
+print(length(faithful$eruptions))
+hist(faithful$eruptions, breaks = 30)
 ```
+
+
+```{r}
+
+source("sampler.R")
+set.seed(1)
+
+faithful_gibbs1 <- gibbs_sampler(preprocessed_data, 2000, 2000, hyperparams, initialisation = initialisation1, allow_switching=FALSE)
+faithful_gibbs2 <- gibbs_sampler(preprocessed_data, 2000, 2000, hyperparams, initialisation = initialisation2, allow_switching=FALSE)
+
+mu_1_vector1 <- sapply(faithful_gibbs1, function (x) x$mu_1)
+mu_2_vector1 <- sapply(faithful_gibbs1, function (x) x$mu_2)
+pi_vector1 <- sapply(faithful_gibbs1, function (x) x$pi)
+sigma2_vector1 <- sapply(faithful_gibbs1, function (x) x$sigma2)
+
+mu_1_vector2 <- sapply(faithful_gibbs2, function (x) x$mu_1)
+mu_2_vector2 <- sapply(faithful_gibbs2, function (x) x$mu_2)
+pi_vector2 <- sapply(faithful_gibbs2, function (x) x$pi)
+sigma2_vector2 <- sapply(faithful_gibbs2, function (x) x$sigma2)
+
+
+```
+
+
+```{r}
+#png(file="./figures/task2_faithful_trace.png")
+
+par(mfrow=c(2,2))
+
+plot(mu_1_vector1, 
+     type = "l", 
+     ylab = expression(mu[1]), 
+     main = expression( paste("Trace: ", mu[1])), col="blue")
+
+lines(mu_1_vector2, type = "l", col="orange")
+
+plot(mu_2_vector1, 
+     type = "l", 
+     ylab = expression(mu[2]),
+     main = expression( paste("Trace: ", mu[2])) , col="blue")
+
+lines(mu_2_vector2, type = "l", col="orange")
+
+legend("topright",
+       legend = c("Initial 1", "Initial 2"),
+       col = c("blue", "orange"),
+       lty = 1,
+       cex = 0.8)
+
+plot(pi_vector1, 
+     type = "l", 
+     ylab = expression(pi),
+     main = expression( paste("Trace: ", pi)), col="blue")
+
+lines(pi_vector2, type = "l", col="orange")
+
+plot(sigma2_vector1, 
+     type = "l", 
+     ylab = expression(sigma^2),
+     main = expression( paste("Trace: ", sigma^2)), col="blue")
+
+lines(sigma2_vector2, type = "l", col="orange")
+
+#dev.off()
+
+```
+
