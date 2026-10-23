@@ -8,6 +8,7 @@ source("block_bootstrap.R")
 source("stationary_bootstrap.R")
 source("diagonalizers.R")
 source("generate_data.R")
+source("ladle_functions.R")
 install.packages("JADE")
 ```
 
@@ -79,13 +80,10 @@ B_hat <- diagonalizer(data, tau)$u_tau
 # B_star is an array
 B_star_array <- replicate(n_boot, {
   X_j <- bootstrap_method(data = data, B = 10)
-  B_hat <- diagonalizer(data = data)$u_tau
+  B_hat <- diagonalizer(data = X_j)$u_tau
 })
 
-
 f_k(B_hat, B_star_array, 3)
-
-
 
 ```
 
@@ -95,8 +93,6 @@ f_k(B_hat, B_star_array, 3)
 ```{r}
 X <- generate_ladle_data(n = 2000)
 Z <- whiten_data(X)
-
-
 
 
 data = Z
@@ -116,25 +112,13 @@ Lambda <- res$lambda
 # then we calculate B_star 
 # B_star is an array
 B_star_array <- replicate(n_boot, {
-  X_j <- bootstrap_method(X = data, p = 1/20)
-  B_hat <- diagonalizer(data = data, lags = tau)$u_tau
+  X_j <- bootstrap_method(data = data, B = 20)
+  B_hat <- diagonalizer(data = X_j, lags = tau)$u_tau
 })
 
 
-for (k in 0:9) {
-  print(g_k(Lambda, B_hat, B_star, k))
+for (k in 1:9) {
+  print(g_k(Lambda, B_hat, B_star_array, k))
 }
 
-
-
 ```
-
-
-```{r}
-```
-
-
-
-
-
-
