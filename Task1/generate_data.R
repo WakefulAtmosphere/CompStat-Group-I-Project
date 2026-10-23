@@ -13,8 +13,8 @@ generate_ladle_data <- function (n) {
   
   Z_noise <- matrix(rnorm(n * (p - q)), nrow = n, ncol = p - q)
   
-  # Combine signal and noise and standardize each component
-  Z <- scale(cbind(Z_signal, Z_noise))
+  # Combine signal and noise
+  Z <- cbind(Z_signal, Z_noise)
   
   Omega <- diag(p)
   X <- Z %*% t(Omega)
