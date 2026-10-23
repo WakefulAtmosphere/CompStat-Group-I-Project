@@ -401,15 +401,27 @@ initialisation2 <- list(
       sigma2  = 2
     )
 
+print(length(faithful$eruptions))
 mean <- mean(faithful$eruptions)
 std <- sd(faithful$eruptions)
 preprocessed_data <- (faithful$eruptions - mean)/ std
 
+
+
 ```
 
 ```{r}
-print(length(faithful$eruptions))
-hist(faithful$eruptions, breaks = 30)
+
+png(file="./figures/task2_faithful_data_histogram.png", width = 1200, height = 600)
+
+par(mfrow=c(1,2))
+
+hist(faithful$eruptions, breaks = 30, xlab = "Eruption time in minutes", main ="")
+
+hist(preprocessed_data, breaks = 30, xlab = "Standardized eruption time", main = "")
+
+dev.off()
+
 ```
 
 
