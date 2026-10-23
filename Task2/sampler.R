@@ -1,3 +1,10 @@
+
+rtrunc <- function(mu, sd, lower = -Inf, upper = Inf) {
+  a <- pnorm(lower, mean = mu, sd = sd)
+  b <- pnorm(upper, mean = mu, sd = sd)
+  qnorm(runif(1, a, b), mu, sd)
+}
+
 ## Gibbs sampler implementation
 
 iterate_parameters <- function(data, previous, hyperparams, allow_switching) {
@@ -52,20 +59,21 @@ iterate_parameters <- function(data, previous, hyperparams, allow_switching) {
   next_parameters$pi <- pi
   
   #sample mus from conditional distribution
-  mu_1 <- rnorm(1, 
-                mean = (m_0 + y_sum_1)/(sigma2 + s2_0*N_1),
-                sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_1))
-  )
-  mu_2 <- rnorm(1, 
-                mean = (m_0 + y_sum_2)/(sigma2 + s2_0*N_2),
-                sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_2))
-  )
-  #Enforce mu_1 < mu_2 if label switching is prevented
-  if (!allow_switching && mu_1 >= mu_2) {
-    placeholder <- mu_1
-    mu_1 <- mu_2
-    mu_2 <- placeholder
+  mean1 = (m_0 + y_sum_1)/(sigma2 + s2_0*N_1)
+  mean2 = mean = (m_0 + y_sum_2)/(sigma2 + s2_0*N_2)
+  sd1 = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_1))
+  sd2 = sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_2))
+                  
+  if (!allow_switching) {
+    mu_1 <- rtrunc(mean1, sd1, upper = mu_2)
+    mu_2<- rtrunc(mean2, sd2, lower = mu_1)
   }
+  else{
+    mu_1 <- rnorm(1, mean = mean1, sd = sd1)
+    mu_2 <- rnorm(1, mean2, sd2)
+  }
+
+
   next_parameters$mu_1 <- mu_1
   next_parameters$mu_2 <- mu_2
   
