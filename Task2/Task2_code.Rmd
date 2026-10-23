@@ -250,6 +250,7 @@ mu_2_vector_2 <- sapply(separate_gibbs_2, function (x) x$mu_2)
 pi_vector <- sapply(separate_gibbs_1, function (x) x$pi)
 pi_vector_2 <- sapply(separate_gibbs_2, function (x) x$pi)
 sigma2_vector <- sapply(separate_gibbs_1, function (x) x$sigma2)
+sigma2_vector_2 <- sapply(separate_gibbs_2, function (x) x$sigma2)
 
 ```
 
@@ -262,9 +263,9 @@ mean(mu_2_vector_2)
 
 ```{r}
 
-#png(file="./figures/task2_partB_setting2_init1_trace.png")
+png(file="./figures/task2_partB_setting2_trace.png")
 
-par(mfrow=c(2,2))
+par(mfrow=c(3,2))
 
 plot(mu_1_vector, 
      type = "l",
@@ -294,26 +295,80 @@ plot(pi_vector_2, type="l",
      main = expression( paste("Trace: ", pi, " with restriction")), 
      ylim=c(0, 1) )
 
-#dev.off()
+plot(sigma2_vector,
+     type="l", 
+     ylab = expression(sigma^2), 
+     main = expression( paste("Trace: ", sigma^2, " without restriction")))
+
+plot(sigma2_vector_2,
+     type="l", 
+     ylab = expression(sigma^2), 
+     main = expression( paste("Trace: ", sigma^2, " with restriction")))
+
+dev.off()
 
 ```
 
 
 ```{r}
 
-png(file="./figures/task2_partB_setting2_init1_acf.png")
+plot_two_acfs <- function(x, y, main) {
+  acf_x <- acf(x, plot = FALSE)
+  acf_y <- acf(y, plot = FALSE)
 
-par(mfrow=c(2,2))
+  plot(acf_x$lag, acf_x$acf,
+       type = "h",
+       col = "blue",
+       lwd = 2,
+       ylim = c(0, 1),
+       xlab = "Lag",
+       ylab = "ACF",
+       main = main)
 
-acf(mu_1_vector, main = expression( paste("ACF: ", mu[1])))
-acf(mu_2_vector, main = expression( paste("ACF: ", mu[2])))
-acf(pi_vector, main = expression( paste("ACF: ", pi)))
-acf(sigma2_vector, main = expression( paste("ACF: ", sigma^2)))
+  lines(acf_y$lag, acf_y$acf,
+        type = "h",
+        col = "orange",
+        lwd = 2)
+
+  legend("topright",
+         legend = c("Without restriction", "With restriction"),
+         col = c("blue", "orange"),
+         lwd = 2,
+         bty = "n")
+}
+
+
+```
+
+```{r}
+
+png(file = "./figures/task2_partB_setting2_acf.png")
+
+par(mfrow = c(2, 2))
+
+plot_two_acfs(
+  mu_1_vector, mu_1_vector_2,
+  expression(paste("ACF: ", mu[1]))
+)
+
+plot_two_acfs(
+  mu_2_vector, mu_2_vector_2,
+  expression(paste("ACF: ", mu[2]))
+)
+
+plot_two_acfs(
+  pi_vector, pi_vector_2,
+  expression(paste("ACF: ", pi))
+)
+
+plot_two_acfs(
+  sigma2_vector, sigma2_vector_2,
+  expression(paste("ACF: ", sigma^2))
+)
 
 dev.off()
 
 ```
-
 
 
 
