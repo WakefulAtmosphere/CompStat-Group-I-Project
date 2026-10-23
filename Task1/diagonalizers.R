@@ -19,13 +19,17 @@ AMUSE_diagonalizer <- function(data, lags = 1) {
 SOBI_diagonalizer <- function(data, lags){
   Sigma_lags <- autocov_matrices(data, lags)
   
+  Sigma_sym <- lapply(Sigma_lags, function(Sigma) {
+    (Sigma + t(Sigma)) / 2
+  })
+  
   # Store matrices in a p x p x K array
-  p <- ncol(Z)
-  K <- length(Sigma_lags)
+  p <- ncol(data)
+  K <- length(Sigma_sym)
   Sigma_array <- array(0, dim = c(p, p, K))
   
   for (k in seq_len(K)) {
-    Sigma_array[, , k] <- Sigma_lags[[k]]
+    Sigma_array[, , k] <- Sigma_sym[[k]]
   }
   
   # Joint diagonalization
@@ -47,31 +51,24 @@ SOBI_diagonalizer <- function(data, lags){
 }
 
 
-diagonalizer <- function(data,
+diagonalizer_full <- function(data,
                          lags = 1,
                          n_boot = 200,
                          bootstrap_method = block_bootstrap,
+                         block_size = 10,
                          diagonalizer = AMUSE_diagonalizer) {
   res <- diagonalizer(data, lags)
   
-  # then we calculate B_star 
+  # then we calculate B_star
   # B_star is an array
   B_star_array <- replicate(n_boot, {
-    X_j <- bootstrap_method(data = data, B = 10)
-    B_hat <- diagonalizer(data = data, lags)$u_tau
+    X_j <- bootstrap_method(data = data, block_size)
+    B_hat <- diagonalizer(data = X_j, lags)$u_tau
   })
   
   list(
     B_hat = res$u_tau, 
     B_star = B_star_array,
-    lambda = Lambda
+    lambda = res$lambda
   )
 }
-
-
-
-
-
-
-
-
