@@ -54,16 +54,12 @@ iterate_parameters <- function(data, previous, hyperparams, allow_switching) {
   y_sum_1 <- sum(group_1_data)
   y_sum_2 <- sum(group_2_data)
   
-  #sample from the conditional likelihood of group allocation parameter pi
-  pi <- rbeta(1, a + N_1, b + n - N_1)
-  next_parameters$pi <- pi
-  
   #sample mus from conditional distribution
   mean1 = (m_0 + y_sum_1)/(sigma2 + s2_0*N_1)
   mean2 = mean = (m_0 + y_sum_2)/(sigma2 + s2_0*N_2)
   sd1 = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_1))
   sd2 = sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_2))
-                  
+  
   if (!allow_switching) {
     mu_1 <- rtrunc(mean1, sd1, upper = mu_2)
     mu_2<- rtrunc(mean2, sd2, lower = mu_1)
@@ -72,10 +68,14 @@ iterate_parameters <- function(data, previous, hyperparams, allow_switching) {
     mu_1 <- rnorm(1, mean = mean1, sd = sd1)
     mu_2 <- rnorm(1, mean2, sd2)
   }
-
-
+  
   next_parameters$mu_1 <- mu_1
   next_parameters$mu_2 <- mu_2
+  
+  #sample from the conditional likelihood of group allocation parameter pi
+  pi <- rbeta(1, a + N_1, b + n - N_1)
+  next_parameters$pi <- pi
+
   
   #calculate parameters for the conditional of sigma^2
   #this needs cleanup later
