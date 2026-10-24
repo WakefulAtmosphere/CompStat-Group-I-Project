@@ -213,11 +213,12 @@ set.seed(1)
 
 n <- 100
 allocation <- rbinom(n, size = 1, prob = 0.7)
-separate_data <- allocation*rnorm(n, -1, 1) + (1 - allocation)*rnorm(n, 1, 1)
+mixed_data <- allocation*rnorm(n, -1, 1) + (1 - allocation)*rnorm(n, 1, 1)
 
 ```
 
-#### Initialisation $\mu_1 < \mu_2$
+
+#### With or without restriction
 
 ```{r}
 
@@ -240,17 +241,17 @@ initialisation <- list(
       sigma2  = 1
     )
 
-separate_gibbs_1 = gibbs_sampler(separate_data, 2000, 0, hyperparams, initialisation)
-separate_gibbs_2 = gibbs_sampler(separate_data, 2000, 0, hyperparams, initialisation, allow_switching=FALSE)
+mixed_gibbs_1 = gibbs_sampler(mixed_data, 2000, 0, hyperparams, initialisation)
+mixed_gibbs_2 = gibbs_sampler(mixed_data, 2000, 0, hyperparams, initialisation, allow_switching=FALSE)
 
-mu_1_vector <- sapply(separate_gibbs_1, function (x) x$mu_1)
-mu_2_vector <- sapply(separate_gibbs_1, function (x) x$mu_2)
-mu_1_vector_2 <- sapply(separate_gibbs_2, function (x) x$mu_1)
-mu_2_vector_2 <- sapply(separate_gibbs_2, function (x) x$mu_2)
-pi_vector <- sapply(separate_gibbs_1, function (x) x$pi)
-pi_vector_2 <- sapply(separate_gibbs_2, function (x) x$pi)
-sigma2_vector <- sapply(separate_gibbs_1, function (x) x$sigma2)
-sigma2_vector_2 <- sapply(separate_gibbs_2, function (x) x$sigma2)
+mu_1_vector <- sapply(mixed_gibbs_1, function (x) x$mu_1)
+mu_2_vector <- sapply(mixed_gibbs_1, function (x) x$mu_2)
+mu_1_vector_2 <- sapply(mixed_gibbs_2, function (x) x$mu_1)
+mu_2_vector_2 <- sapply(mixed_gibbs_2, function (x) x$mu_2)
+pi_vector <- sapply(mixed_gibbs_1, function (x) x$pi)
+pi_vector_2 <- sapply(mixed_gibbs_2, function (x) x$pi)
+sigma2_vector <- sapply(mixed_gibbs_1, function (x) x$sigma2)
+sigma2_vector_2 <- sapply(mixed_gibbs_2, function (x) x$sigma2)
 
 ```
 
@@ -281,6 +282,12 @@ plot(mu_1_vector_2,
      ylab = expression(mu[1]), 
      main = expression( paste("Trace: ", mu[1], " and ", mu[2], " with restriction")),
      col="blue", ylim=c(-3, 3))
+
+legend("topright",
+       legend = c(expression(mu[1]), expression(mu[2])),
+       col = c("blue", "orange"),
+       lty = 1,
+       cex = 0.8)
 
 lines(mu_2_vector_2, type = "l",col="orange")
 
@@ -370,12 +377,14 @@ dev.off()
 
 ```
 
+#### Another initialisation
 
 
 
 
 
 ## Aplication to the faithful dataset
+
 ```{r}
 
 hyperparams = list(
@@ -399,6 +408,13 @@ initialisation2 <- list(
       mu_2    = 5,
       pi      = 0.8,
       sigma2  = 2
+    )
+
+initialisation3 <- list(
+      mu_1    = -5,
+      mu_2    = 5,
+      pi      = 0.4,
+      sigma2  = 2.5
     )
 
 print(length(faithful$eruptions))
@@ -432,6 +448,7 @@ set.seed(1)
 
 faithful_gibbs1 <- gibbs_sampler(preprocessed_data, 2000, 2000, hyperparams, initialisation = initialisation1, allow_switching=FALSE)
 faithful_gibbs2 <- gibbs_sampler(preprocessed_data, 2000, 2000, hyperparams, initialisation = initialisation2, allow_switching=FALSE)
+faithful_gibbs3 <- gibbs_sampler(preprocessed_data, 2000, 2000, hyperparams, initialisation = initialisation3, allow_switching=FALSE)
 
 mu_1_vector1 <- sapply(faithful_gibbs1, function (x) x$mu_1)
 mu_2_vector1 <- sapply(faithful_gibbs1, function (x) x$mu_2)
@@ -443,12 +460,17 @@ mu_2_vector2 <- sapply(faithful_gibbs2, function (x) x$mu_2)
 pi_vector2 <- sapply(faithful_gibbs2, function (x) x$pi)
 sigma2_vector2 <- sapply(faithful_gibbs2, function (x) x$sigma2)
 
+mu_1_vector3 <- sapply(faithful_gibbs3, function (x) x$mu_1)
+mu_2_vector3 <- sapply(faithful_gibbs3, function (x) x$mu_2)
+pi_vector3 <- sapply(faithful_gibbs3, function (x) x$pi)
+sigma2_vector3 <- sapply(faithful_gibbs3, function (x) x$sigma2)
+
 
 ```
 
 
 ```{r}
-#png(file="./figures/task2_faithful_trace.png")
+png(file="./figures/task2_faithful_trace.png")
 
 par(mfrow=c(2,2))
 
@@ -458,6 +480,7 @@ plot(mu_1_vector1,
      main = expression( paste("Trace: ", mu[1])), col="blue")
 
 lines(mu_1_vector2, type = "l", col="orange")
+lines(mu_1_vector3, type = "l", col="red")
 
 plot(mu_2_vector1, 
      type = "l", 
@@ -465,10 +488,11 @@ plot(mu_2_vector1,
      main = expression( paste("Trace: ", mu[2])) , col="blue")
 
 lines(mu_2_vector2, type = "l", col="orange")
+lines(mu_2_vector3, type = "l", col="red")
 
 legend("topright",
-       legend = c("Initial 1", "Initial 2"),
-       col = c("blue", "orange"),
+       legend = c("Initial 1", "Initial 2", "Initial 3"),
+       col = c("blue", "orange", "red"),
        lty = 1,
        cex = 0.8)
 
@@ -478,6 +502,7 @@ plot(pi_vector1,
      main = expression( paste("Trace: ", pi)), col="blue")
 
 lines(pi_vector2, type = "l", col="orange")
+lines(pi_vector3, type = "l", col="red")
 
 plot(sigma2_vector1, 
      type = "l", 
@@ -485,8 +510,9 @@ plot(sigma2_vector1,
      main = expression( paste("Trace: ", sigma^2)), col="blue")
 
 lines(sigma2_vector2, type = "l", col="orange")
+lines(sigma2_vector3, type = "l", col="red")
 
-#dev.off()
+dev.off()
 
 ```
 
