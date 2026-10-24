@@ -69,18 +69,41 @@ We start by inspecting how the bootstrap methods preserve local dependence compa
 
 ```{r}
 # we use the setting 1 simulation data, because we know that it at has autocorrelation. 
+set.seed(123)
 X <- generate_ladle_data(n = 2000)
-Z <- whiten_data(X[, 1:5])
+Z <- whiten_data(X)
 
+n <- nrow(Z)
 # iid bootstrap of Z
 # one replicate
-i_s <- sample(seq(1, nrow(Z)), replace = TRUE)
-replicate_iid <- do.call(rbind, lapply(i_s, function(i) {Z[i, ]}))
+i_s <- sample(seq_len(n), size = n, replace = TRUE)
+replicate_iid <- Z[i_s, , drop = FALSE]
+
 block_bootstrap_replicate <- block_bootstrap(data = Z, B = 5)
 
+stationary_bootstrap_replicate <- stationary_bootstrap(data = Z, B = 5)
 
-autocov_matrices(Z, lags = lags)
-autocov_matrices(replicate_iid, lags = lags)
+max_lag <- 30
+
+acf_original <- acf(Z[, 1], lag.max = max_lag, plot = FALSE)
+acf_iid <- acf(replicate_iid[, 1],
+                    lag.max = max_lag, plot = FALSE)
+acf_mbb <- acf(block_bootstrap_replicate[, 1],
+                    lag.max = max_lag, plot = FALSE)
+acf_sb <- acf(stationary_bootstrap_replicate[, 1],
+                    lag.max = max_lag, plot = FALSE)
+
+par(mfrow = c(2, 2))
+
+plot(acf_original, main = "Original series")
+plot(acf_iid, main = "IID bootstrap")
+plot(acf_mbb, main = "Moving block bootstrap (B = 5)")
+plot(acf_sb, main = "Stationary bootstrap (L = 5)")
+
+par(mfrow = c(1, 1))
+
+# autocov_matrices(Z, lags = lags)
+# autocov_matrices(replicate_iid, lags = lags)
 
 
 acf(Z[, 1], main = "")
@@ -90,31 +113,168 @@ acf(block_bootstrap_replicate[, 1], main = "")
 ```
 
 
-# Part C
-
-I tried to draft a function for the ladle quantities, but in the end I just calculated f_0 without a function. I tried to do it so that it would be easy to convert it into a function later on though. It's not very good yet :D
+Better check numerically than use many plots...
 
 ```{r}
-data = Z
-tau = 1
-n_boot = 200
-bootstrap_method = block_bootstrap
-diagonalizer = AMUSE_diagonalizer
+# Extract sample autocorrelations at lags 1, ..., max_lag
+get_acf <- function(x, max_lag = 20) {
+  as.numeric(acf(x, lag.max = max_lag, plot = FALSE)$acf)[-1]
+}
 
+max_lag <- 20
+n_boot <- 200
 
-# we first calculate B_hat 
-# so the first k columns of the diagonalizer computed from the original sample
-B_hat <- diagonalizer(data, tau)$u_tau
+# Original ACF for component 1
+acf_original <- get_acf(Z[, 1], max_lag)
 
-# then we calculate B_star 
-# B_star is an array
-B_star_array <- replicate(n_boot, {
-  X_j <- bootstrap_method(data = data, B = 10)
-  B_hat <- diagonalizer(data = X_j)$u_tau
+# IID bootstrap replicates
+set.seed(789)
+
+acf_iid_reps <- replicate(n_boot, {
+  idx <- sample(seq_len(n), size = n, replace = TRUE)
+  get_acf(Z[idx, 1], max_lag)
 })
 
-f_k(B_hat, B_star_array, 3)
+# Summarize the average ACF and its deviation from the original
+iid_mean_acf <- rowMeans(acf_iid_reps)
+iid_mae <- mean(abs(iid_mean_acf - acf_original))
+iid_mae
 
+compare_bootstrap <- function(Z, block_lengths, method,
+                              n_boot = 200, max_lag = 20) {
+  original_acf <- get_acf(Z[, 1], max_lag)
+  results <- lapply(block_lengths, function(L) {
+    acf_reps <- replicate(n_boot, {
+      if (method == "mbb") {
+        Z_star <- block_bootstrap(data = Z, B = L)
+      } else if (method == "sb") {
+        Z_star <- stationary_bootstrap(data = Z, B = L)
+      } else {
+        stop("Unknown bootstrap method")
+      }
+      get_acf(Z_star[, 1], max_lag)
+    })
+
+    mean_acf <- rowMeans(acf_reps)
+
+    data.frame(
+      block_length = L,
+      mean_abs_error = mean(abs(mean_acf - original_acf)),
+      lag1_original = original_acf[1],
+      lag1_bootstrap = mean_acf[1]
+    )
+  })
+  do.call(rbind, results)
+}
+
+results_mbb <- compare_bootstrap(
+  Z, block_lengths, method = "mbb",
+  n_boot = 200, max_lag = 20
+)
+
+results_sb <- compare_bootstrap(
+  Z, block_lengths, method = "sb",
+  n_boot = 200, max_lag = 20
+)
+
+plot(results_mbb$block_length, results_mbb$mean_abs_error,
+     type = "b", pch = 19,
+     xlab = "Block length",
+     ylab = "Mean absolute ACF error",
+     main = "ACF preservation by block length")
+
+lines(results_sb$block_length, results_sb$mean_abs_error,
+      type = "b", pch = 17, lty = 2)
+
+legend("topright",
+       legend = c("Moving block", "Stationary"),
+       pch = c(19, 17), lty = c(1, 2))
+```
+
+
+# Part C
+
+Check the ladle functions for simulated data:
+
+```{r}
+set.seed(385)
+
+# Change these to test both boot strap methods and diagonalizers
+res <- diagonalizer_full(data = Z, 
+                         lags = 1:12, 
+                         n_boot = 200, 
+                         bootstrap_method = stationary_bootstrap, 
+                         block_size = 20, 
+                         diagonalizer = SOBI_diagonalizer)
+
+B_hat <- res$B_hat
+B_star <- res$B_star # the array containing b_stars
+lambda <- res$lambda
+
+p <- length(lambda)
+
+# Check phi function
+lambda_values <- sort(as.numeric(lambda), decreasing = TRUE)
+k_values <- seq_len(p - 1)
+
+phi_values <- vapply(k_values, function(k) {
+  phi(lambda, k)
+}, numeric(1))
+
+results_phi <- data.frame(
+  k = k_values,
+  eigenvalue_squared = lambda_values[k_values],
+  phi = phi_values
+)
+
+results_phi
+
+# Check orthonormality of U_tau
+# Original estimate
+max(abs(crossprod(B_hat) - diag(ncol(B_hat))))
+
+# One bootstrap estimate
+B_star_1 <- B_star[, , 1]
+
+max(abs(crossprod(B_star_1) - diag(ncol(B_star_1))))
+
+p <- nrow(B_hat)
+
+f0_values <- c(
+  0,
+  sapply(1:(p - 1), function(k) {
+    f_0_k(B_hat, B_star, k)
+  })
+)
+
+f_values <- c(
+  0,
+  sapply(1:(p-1), function(k) {
+    f_k(B_hat, B_star, k)
+  })
+)
+
+data.frame(
+  k = 0:(p - 1),
+  f0 = f0_values,
+  f = f_values
+)
+
+# Compute full criterion and estimate the dimension
+g_values <- sapply(1:(p - 1), function(k) {
+  g_k(lambda, B_hat, B_star, k)
+})
+
+results <- data.frame(
+  k = 1:(p - 1),
+  phi = phi_values,
+  f = f_values[-1],
+  g = g_values
+)
+results
+
+k_hat <- results$k[which.min(results$g)]
+k_hat
 ```
 
 
@@ -167,6 +327,7 @@ phi_s <- sapply(1:9, function(k){phi(lambda, k)})
 g_s <- f_s + phi_s
 
 ```
+
 ```{r}
 plot(f_s, type = "b", xlab = "component", ylab = "criterion", col = "black", ylim = c(0, 0.6))
 lines(phi_s, type = "b", col = "red")
