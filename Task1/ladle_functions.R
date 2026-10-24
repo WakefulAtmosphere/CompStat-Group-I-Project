@@ -1,8 +1,15 @@
-phi <- function (lambda, k) {
-  lambdas <- diag(lambda)
-  lambdas <- sort(lambdas, decreasing = TRUE)
+phi <- function(lambda, k) {
+  lambdas <- sort(as.numeric(lambda), decreasing = TRUE)
+  p <- length(lambdas)
   
-  # Already squared eigenvalues in lambda
+  if (k < 1 || k >= p || k != as.integer(k)) {
+    stop("k must be an integer between 1 and p - 1.")
+  }
+  
+  if (any(!is.finite(lambdas)) || any(lambdas < 0)) {
+    stop("Squared eigenvalues must be finite and non-negative.")
+  }
+  
   lambdas[k] / (1 + sum(lambdas))
 }
 

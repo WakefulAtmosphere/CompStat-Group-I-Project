@@ -4,11 +4,13 @@ AMUSE_diagonalizer <- function(data, lags = 1) {
   # Symmetrize the lagged matrices
   lag_tau_sigma_sym <- (lag_tau_sigma + t(lag_tau_sigma)) / 2
   
-  U_tau <- eigen(lag_tau_sigma_sym, symmetric = T)$vectors
+  eig <- eigen(lag_tau_sigma_sym, symmetric = T)
+  U_tau <- eig$vectors
+  Lambda <- eig$values^2
   
-  # Calculate the AMUSE unmixing matrix
-  Lambda <- diag(t(U_tau) %*% lag_tau_sigma_sym %*% U_tau)
-  Lambda <- Lambda^2
+  ord <- order(Lambda, decreasing = TRUE)
+  Lambda <- Lambda[ord]
+  U_tau <- U_tau[, ord, drop = FALSE]
 
   list(
     u_tau = U_tau,
@@ -42,12 +44,19 @@ SOBI_diagonalizer <- function(data, lags){
   # Calculate the unmixing matrix
   Lambda <- numeric(p)
   
-  for (k in seq_along(Sigma_lags)) {
-    Sigma_tau <- Sigma_lags[[k]]
-    Lambda <- Lambda + 
-      diag(t(U_TAU) %*% Sigma_tau %*% U_TAU)^2
+  for (k in seq_along(Sigma_sym)) {
+    D_tau <- crossprod(
+      U_TAU,
+      Sigma_sym[[k]] %*% U_TAU
+    )
+    Lambda <- Lambda + diag(D_tau)^2
   }
-
+  
+  # Sort lambda and reorder the corresponding directions
+  ord <- order(Lambda, decreasing = TRUE)
+  Lambda <- Lambda[ord]
+  U_TAU <- U_TAU[, ord, drop = FALSE]
+  
   list(
     u_tau = U_TAU,
     lambda = Lambda
