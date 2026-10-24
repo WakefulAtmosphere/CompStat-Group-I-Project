@@ -215,19 +215,18 @@ p <- length(lambda)
 
 # Check phi function
 lambda_values <- sort(as.numeric(lambda), decreasing = TRUE)
-k_values <- seq_len(p - 1)
+k_values <- 0:(p-1)
 
 phi_values <- vapply(k_values, function(k) {
   phi(lambda, k)
 }, numeric(1))
 
-results_phi <- data.frame(
+data.frame(
   k = k_values,
-  eigenvalue_squared = lambda_values[k_values],
+  eigenvalue_squared = lambda_values,
   phi = phi_values
 )
 
-results_phi
 
 # Check orthonormality of U_tau
 # Original estimate
@@ -240,19 +239,14 @@ max(abs(crossprod(B_star_1) - diag(ncol(B_star_1))))
 
 p <- nrow(B_hat)
 
-f0_values <- c(
-  0,
-  sapply(1:(p - 1), function(k) {
+f0_values <- sapply(0:(p - 1), function(k) {
     f_0_k(B_hat, B_star, k)
   })
-)
 
-f_values <- c(
-  0,
-  sapply(1:(p-1), function(k) {
-    f_k(B_hat, B_star, k)
+
+f_values <- sapply(0:(p - 1), function(k) {
+  f_k(B_hat, B_star, k)
   })
-)
 
 data.frame(
   k = 0:(p - 1),
@@ -261,14 +255,14 @@ data.frame(
 )
 
 # Compute full criterion and estimate the dimension
-g_values <- sapply(1:(p - 1), function(k) {
+g_values <- sapply(0:(p - 1), function(k) {
   g_k(lambda, B_hat, B_star, k)
 })
 
 results <- data.frame(
-  k = 1:(p - 1),
+  k = 0:(p - 1),
   phi = phi_values,
-  f = f_values[-1],
+  f = f_values,
   g = g_values
 )
 results
@@ -279,100 +273,87 @@ k_hat
 
 
 # Part D Simulation Study 
+
 Now we use the simulation setting specified as Setting 1 in the paper to investigate the behaviour of our implementation.
 
 First we test the methods once and plot the results of f, phi and g to verify the results are as expected. We use the stationary bootstrap method, expected block size of 20 and the SOBI estimator here. 
 
 ```{r}
+set.seed(469)
+
 X <- generate_ladle_data(n = 2000)
 Z <- whiten_data(X)
+p <- ncol(Z)
 
-
-data = Z
+# Setting 1 parameters
 tau = 1:12
 n_boot = 200
+block_size = 20
 bootstrap_method = stationary_bootstrap
 diagonalizer = SOBI_diagonalizer
 
 
-# we first calculate B_hat 
-# so the first k columns of the diagonalizer computed from the original sample
-res <- diagonalizer(data, tau)
-
-B_hat <- res$u_tau
-Lambda <- res$lambda
-
-# then we calculate B_star 
-# B_star is an array
-B_star_array <- replicate(n_boot, {
-  X_j <- bootstrap_method(data = data, B = 20)
-  B_hat <- diagonalizer(data = X_j, lags = tau)$u_tau
-})
-
-
-
 res <- diagonalizer_full(data = Z, 
-                         lags = 1:12, 
-                         n_boot = 200, 
-                         bootstrap_method = stationary_bootstrap, 
-                         block_size = 20, 
-                         diagonalizer = SOBI_diagonalizer)
+                         lags = tau, 
+                         n_boot = n_boot, 
+                         bootstrap_method = bootstrap_method, 
+                         block_size = block_size, 
+                         diagonalizer = diagonalizer)
 
 B_hat <- res$B_hat
 B_star <- res$B_star
 lambda <- res$lambda
 
-f_s <- sapply(1:9, function(k){f_k(B_hat, B_star, k)})
-phi_s <- sapply(1:9, function(k){phi(lambda, k)})
+k_values <- 0:(p-1)
+f_s <- sapply(k_values, function(k){f_k(B_hat, B_star, k)})
+phi_s <- sapply(k_values, function(k){phi(lambda, k)})
 g_s <- f_s + phi_s
 
 ```
 
 ```{r}
-plot(f_s, type = "b", xlab = "component", ylab = "criterion", col = "black", ylim = c(0, 0.6))
-lines(phi_s, type = "b", col = "red")
-lines(g_s, type = "b", col = "green")
-legend(x = "topright", legend = c("f", "phi", "g"),  lty = c(1), col = c("black", "red", "green"))
+plot(k_values, f_s,
+     type = "b",
+     xlab = "Component",
+     ylab = "Criterion",
+     col = "black",
+     ylim = c(0, 0.5),
+     xaxt = "n")
 
+axis(1, at = k_values)
+
+lines(k_values, phi_s, type = "b", col = "red")
+lines(k_values, g_s, type = "b", col = "green")
+
+legend("topright",
+       legend = c("f", expression(phi), "g"),
+       col = c("black", "red", "green"),
+       pch = 1)
 ```
 
-Next we repeat the bootstrapping and estimation 2000 times to gauge the error. I'm not re-doing the simulation now, but that might also be needed. 
+Next we repeat the bootstrapping and estimation 2000 times to gauge the error.
 
-```{r}
-# we repeat the calculation 2000 times
-set.seed(20261024)
-signal_dim_estimates <- replicate(200, {
-  res <- diagonalizer_full(data = Z, 
-                         lags = 2, 
-                         n_boot = 200, 
-                         bootstrap_method = block_bootstrap, 
-                         block_size = 20, 
-                         diagonalizer = AMUSE_diagonalizer)
-  g_s <- sapply(1:9, function(k){g_k(res$lambda, res$B_hat, res$B_star, k)})
-  which.min(g_s)
-})
 
-signal_dim_estimates
-summary(signal_dim_estimates)
-
-```
 ```{r}
 # we repeat the calculation 2000 times
 # with simulation
 # this takes a minute to run
 # with AMUSE
 set.seed(20261024)
+
+k_values <- 0:9
+
 signal_dim_estimates_AMUSE <- replicate(200, {
   X <- generate_ladle_data(n = 2000)
   Z <- whiten_data(X)
   res <- diagonalizer_full(data = Z, 
-                         lags = 2, 
+                         lags = 1, 
                          n_boot = 200, 
                          bootstrap_method = block_bootstrap, 
                          block_size = 20, 
                          diagonalizer = AMUSE_diagonalizer)
-  g_s <- sapply(1:9, function(k){g_k(res$lambda, res$B_hat, res$B_star, k)})
-  which.min(g_s)
+  g_s <- sapply(k_values, function(k){g_k(res$lambda, res$B_hat, res$B_star, k)})
+  k_values[which.min(g_s)]
 })
 
 summary(signal_dim_estimates_AMUSE)
@@ -395,14 +376,11 @@ signal_dim_estimates_SOBI <- replicate(200, {
                          bootstrap_method = block_bootstrap, 
                          block_size = 20, 
                          diagonalizer = SOBI_diagonalizer)
-  g_s <- sapply(1:9, function(k){g_k(res$lambda, res$B_hat, res$B_star, k)})
-  which.min(g_s)
+  g_s <- sapply(k_values, function(k){g_k(res$lambda, res$B_hat, res$B_star, k)})
+  k_values[which.min(g_s)]
 })
+
 hist(signal_dim_estimates_SOBI)
 ```
-
-
-
-
 
 
