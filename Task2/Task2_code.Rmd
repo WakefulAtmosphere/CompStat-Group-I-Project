@@ -283,13 +283,13 @@ plot(mu_1_vector_2,
      main = expression( paste("Trace: ", mu[1], " and ", mu[2], " with restriction")),
      col="blue", ylim=c(-3, 3))
 
+lines(mu_2_vector_2, type = "l",col="orange")
+
 legend("topright",
        legend = c(expression(mu[1]), expression(mu[2])),
        col = c("blue", "orange"),
        lty = 1,
        cex = 0.8)
-
-lines(mu_2_vector_2, type = "l",col="orange")
 
 plot(pi_vector,
      type="l", 
@@ -514,5 +514,17 @@ lines(sigma2_vector3, type = "l", col="red")
 
 dev.off()
 
+```
+```{r}
+png(file="./figures/task2_faithful_acf.png")
+
+par(mfrow=c(2,2))
+
+acf(mu_1_vector1, main = expression( paste("ACF: ", mu[1])))
+acf(mu_2_vector1, main = expression( paste("ACF: ", mu[2])))
+acf(pi_vector1, main = expression( paste("ACF: ", pi)))
+acf(sigma2_vector1, main = expression( paste("ACF: ", sigma^2)))
+
+dev.off()
 ```
 
