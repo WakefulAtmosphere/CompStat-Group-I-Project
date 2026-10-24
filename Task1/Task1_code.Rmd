@@ -9,7 +9,8 @@ source("stationary_bootstrap.R")
 source("diagonalizers.R")
 source("generate_data.R")
 source("ladle_functions.R")
-install.packages("JADE")
+#install.packages("JADE")
+library("JADE")
 ```
 
 # Part A
@@ -57,6 +58,35 @@ lags <- 1:5
 # Use the same standardized test set as above
 Sigma_lags <- autocov_matrices(Z, lags = lags)
 Sigma_lags
+```
+# Part B
+
+We test the fixed block and the stationary bootstrap. The implementation functions are in separate R-files.
+
+We use the same data as before to demonstrate how the bootstrap methods preserve local dependence and to investigate how the choice of block length, or expected block length for the stationary bootstrap, affects the resampled series.
+
+We start by inspecting how the bootstrap methods preserve local dependence compared to iid methods.
+
+```{r}
+# we use the setting 1 simulation data, because we know that it at has autocorrelation. 
+X <- generate_ladle_data(n = 2000)
+Z <- whiten_data(X[, 1:5])
+
+# iid bootstrap of Z
+# one replicate
+i_s <- sample(seq(1, nrow(Z)), replace = TRUE)
+replicate_iid <- do.call(rbind, lapply(i_s, function(i) {Z[i, ]}))
+block_bootstrap_replicate <- block_bootstrap(data = Z, B = 5)
+
+
+autocov_matrices(Z, lags = lags)
+autocov_matrices(replicate_iid, lags = lags)
+
+
+acf(Z[, 1], main = "")
+acf(replicate_iid[, 1])
+acf(block_bootstrap_replicate[, 1], main = "")
+
 ```
 
 
