@@ -585,6 +585,12 @@ legend("topright",
 dev.off()
 ```
 
+#MCSE for fit of faithful
+```{r}
+ESS <- 2000 / (1+2*sum(acf(pi_vector1, plot=FALSE)$acf))
+MCSE <- sd(pi_vector1)/sqrt(ESS)
+MCSE
+```
 
 ### Without restriction test
 
