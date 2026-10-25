@@ -241,8 +241,8 @@ initialisation <- list(
       sigma2  = 1
     )
 
-mixed_gibbs_1 = gibbs_sampler(mixed_data, 2000, 0, hyperparams, initialisation)
-mixed_gibbs_2 = gibbs_sampler(mixed_data, 2000, 0, hyperparams, initialisation, allow_switching=FALSE)
+mixed_gibbs_1 = gibbs_sampler(mixed_data, 2000, 2000, hyperparams, initialisation)
+mixed_gibbs_2 = gibbs_sampler(mixed_data, 2000, 2000, hyperparams, initialisation, allow_switching=FALSE)
 
 mu_1_vector <- sapply(mixed_gibbs_1, function (x) x$mu_1)
 mu_2_vector <- sapply(mixed_gibbs_1, function (x) x$mu_2)

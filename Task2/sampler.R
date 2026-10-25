@@ -55,10 +55,10 @@ iterate_parameters <- function(data, previous, hyperparams, allow_switching) {
   y_sum_2 <- sum(group_2_data)
   
   #sample mus from conditional distribution
-  mean1 = (m_0 + y_sum_1)/(sigma2 + s2_0*N_1)
-  mean2 = mean = (m_0 + y_sum_2)/(sigma2 + s2_0*N_2)
+  mean1 = (sigma2*m_0 + s2_0*y_sum_1)/(sigma2 + s2_0*N_1)
+  mean2 = (sigma2*m_0 + s2_0*y_sum_2)/(sigma2 + s2_0*N_2)
   sd1 = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_1))
-  sd2 = sd = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_2))
+  sd2 = sqrt((s2_0*sigma2)/(sigma2 + s2_0*N_2))
   
   if (!allow_switching) {
     mu_1 <- rtrunc(mean1, sd1, upper = mu_2)
