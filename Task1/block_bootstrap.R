@@ -1,5 +1,5 @@
 block_bootstrap <- function(data, B) {
-  n <- nrow(X) # assuming that rows are observations and columns are variables
+  n <- nrow(data) # assuming that rows are observations and columns are variables
   
   # sample indices from {1, ..., n-B+1}
   # for the starting points of the blocks
