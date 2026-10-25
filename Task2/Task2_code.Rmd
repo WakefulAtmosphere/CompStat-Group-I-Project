@@ -443,11 +443,6 @@ pdf(file="./figures/task2_faithful_data_histogram_a.pdf")
 
 hist(faithful$eruptions, breaks = 30, xlab = "Eruption time in minutes", main ="")
 dev.off()
-pdf(file="./figures/task2_faithful_data_histogram_b.pdf")
-
-hist(preprocessed_data, breaks = 30, xlab = "Standardized eruption time", main = "")
-
-dev.off()
 
 ```
 
@@ -554,11 +549,40 @@ hist(sigma2_vector1)
 
 ```{r}
 
-faithful_mu1 <- mean(mu_1_vector1)
-faithful_mu2 <- mean(mu_1_vector2)
+faithful_mu_1 <- mean(mu_1_vector1)
+faithful_mu_2 <- mean(mu_2_vector1)
 faithful_pi <- mean(pi_vector1)
 faithful_sigma2 <- mean(sigma2_vector1)
 
+print(faithful_mu_1)
+print(faithful_mu_2)
+print(faithful_pi)
+print(faithful_sigma2)
+
+```
+
+
+```{r}
+
+pdf(file="./figures/task2_faithful_data_histogram_b.pdf")
+
+hist(preprocessed_data, probability = TRUE, breaks = 30, xlab = "Standardized eruption time", main = "")
+
+curve(
+  faithful_pi * dnorm(x, mean = faithful_mu_1, sd = sqrt(faithful_sigma2)) +
+    (1 - faithful_pi) * dnorm(x, mean = faithful_mu_2, sd = sqrt(faithful_sigma2)),
+  add = TRUE,
+  col = "red",
+  lwd = 2
+)
+
+legend("topright",
+       legend = c("Probability density function of the fitted mixture distribution"),
+       col = c("red"),
+       lty = 1,
+       cex = 0.8)
+
+dev.off()
 ```
 
 
