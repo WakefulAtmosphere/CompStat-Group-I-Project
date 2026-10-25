@@ -374,3 +374,174 @@ hist(signal_dim_estimates_SOBI)
 ```
 
 
+
+
+
+# Part E
+We apply the methods to the time-series data set provided for the assignment in Moodle. We use both the fixed-block and stationary bootstrap versions of the ladle estimator.
+```{r}
+ts_data <- read.delim("timeseries.dat.txt", sep = " ", header = FALSE)
+ts_data_cs <- whiten_data(ts_data)
+p <- ncol(ts_data_cs)
+```
+
+Choosing block length
+```{r}
+for (i in 1:10){
+  acf(ts_data_cs[, i])
+}
+```
+Many acf plots show small autocorrelation even at lags 10 and 15. Let's try with 10. 
+
+We estimate the ladle estimator for both bootstrap methods using (expected) block
+length of B = 10 and evaluating SOBI with τ = 1, . . . 10 lags. 
+
+```{r}
+set.seed(469)
+res_stat <- diagonalizer_full(data = ts_data_cs, 
+                         lags = 1:10, 
+                         n_boot = 200, 
+                         bootstrap_method = stationary_bootstrap, 
+                         block_size = 10, 
+                         diagonalizer = SOBI_diagonalizer)
+res_block <- diagonalizer_full(data = ts_data_cs, 
+                         lags = 1:10, 
+                         n_boot = 200, 
+                         bootstrap_method = block_bootstrap, 
+                         block_size = 10, 
+                         diagonalizer = SOBI_diagonalizer)
+
+k_values <- 0:(p-1)
+g_stat <- sapply(k_values, function(k){g_k(res_stat$lambda, 
+                                           res_stat$B_hat,
+                                           res_stat$B_star, k)})
+g_stat_min <- k_values[which.min(g_stat)]
+g_block <- sapply(k_values, function(k){g_k(res_block$lambda, 
+                                           res_block$B_hat,
+                                           res_block$B_star, k)})
+g_block_min <- k_values[which.min(g_block)]
+
+plot(k_values, g_stat,
+     type = "b",
+     xlab = "Component",
+     ylab = "g(k)",
+     col = "black",
+     ylim = c(0, 0.3),
+     xaxt = "n")
+
+axis(1, at = k_values)
+
+lines(k_values, g_block, type = "b", col = "red")
+
+legend("topright",
+       legend = c("Stationary bootstrap", "Block bootstrap"),
+       col = c("black", "red"),
+       pch = 1)
+```
+
+
+
+
+```{r}
+# comparison
+
+#stat 
+f_stat <- sapply(k_values, function(k){f_k(res_stat$B_hat, res_stat$B_star, k)})
+phi_stat <- sapply(k_values, function(k){phi(res_stat$lambda, k)})
+g_stat <- f_stat + phi_stat
+
+#block
+f_block <- sapply(k_values, function(k){f_k(res_block$B_hat, res_block$B_star, k)})
+phi_block <- sapply(k_values, function(k){phi(res_block$lambda, k)})
+g_block <- f_block + phi_block
+```
+
+
+
+
+```{r}
+par(mfrow = c(2, 1))
+plot(k_values, f_stat,
+     type = "b",
+     xlab = "Component",
+     ylab = "Criterion",
+     col = "black",
+     ylim = c(0, 0.5),
+     xaxt = "n", 
+     main = "Stationary bootstrap")
+
+axis(1, at = k_values)
+lines(k_values, phi_stat, type = "b", col = "red")
+lines(k_values, g_stat, type = "b", col = "green")
+legend("topright",
+       legend = c("f", expression(phi), "g"),
+       col = c("black", "red", "green"),
+       pch = 1)
+
+plot(k_values, f_block,
+     type = "b",
+     xlab = "Component",
+     ylab = "Criterion",
+     col = "black",
+     ylim = c(0, 0.5),
+     xaxt = "n", 
+     main = "Block bootstrap")
+
+axis(1, at = k_values)
+lines(k_values, phi_block, type = "b", col = "red")
+lines(k_values, g_block, type = "b", col = "green")
+legend("topright",
+       legend = c("f", expression(phi), "g"),
+       col = c("black", "red", "green"),
+       pch = 1)
+
+
+```
+
+Block length sensitivity analysis???
+
+
+```{r}
+set.seed(1234)
+stat_minimums <- numeric(6)
+block_minimums <- numeric(6)
+
+for (B in 5:10) {
+  res_stat <- diagonalizer_full(data = ts_data_cs, 
+                         lags = 1:B, 
+                         n_boot = 200, 
+                         bootstrap_method = stationary_bootstrap, 
+                         block_size = B, 
+                         diagonalizer = SOBI_diagonalizer)
+res_block <- diagonalizer_full(data = ts_data_cs, 
+                         lags = 1:B, 
+                         n_boot = 200, 
+                         bootstrap_method = block_bootstrap, 
+                         block_size = B, 
+                         diagonalizer = SOBI_diagonalizer)
+
+k_values <- 0:(p-1)
+g_stat <- sapply(k_values, function(k){g_k(res_stat$lambda, 
+                                           res_stat$B_hat,
+                                           res_stat$B_star, k)})
+g_stat_min <- k_values[which.min(g_stat)]
+stat_minimums[B-4] <- g_stat_min
+g_block <- sapply(k_values, function(k){g_k(res_block$lambda, 
+                                           res_block$B_hat,
+                                           res_block$B_star, k)})
+g_block_min <- k_values[which.min(g_block)]
+block_minimums[B-4] <- g_block_min
+
+}
+stat_minimums
+block_minimums
+```
+
+
+
+
+
+
+
+
+
