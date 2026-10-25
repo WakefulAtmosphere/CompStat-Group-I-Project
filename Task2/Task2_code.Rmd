@@ -260,6 +260,13 @@ sigma2_vector_2 <- sapply(mixed_gibbs_2, function (x) x$sigma2)
 ```
 
 ```{r}
+mean(pi_vector)
+mean(mu_1_vector)
+mean(mu_2_vector)
+mean(sigma2_vector)
+```
+
+```{r}
 mean(pi_vector_2)
 mean(mu_1_vector_2)
 mean(mu_2_vector_2)
