@@ -321,59 +321,97 @@ legend("topright",
        pch = 1)
 ```
 
-Next we repeat the bootstrapping and estimation 2000 times to gauge the error.
+Next we repeat the bootstrapping and estimation to gauge the error.
 
 
 ```{r}
-# we repeat the calculation 2000 times
 # with simulation
 # this takes a minute to run
 # with AMUSE
 set.seed(20261024)
 
 k_values <- 0:9
+R <- 100
+n_boot <- 200
+true_q <- 5
 
-signal_dim_estimates_AMUSE <- replicate(200, {
-  X <- generate_ladle_data(n = 2000)
+signal_dim_estimates_AMUSE <- replicate(R, {
+  X <- generate_ladle_data(n = 1500)
   Z <- whiten_data(X)
-  res <- diagonalizer_full(data = Z, 
-                         lags = 1, 
-                         n_boot = 200, 
-                         bootstrap_method = block_bootstrap, 
-                         block_size = 20, 
-                         diagonalizer = AMUSE_diagonalizer)
-  g_s <- sapply(k_values, function(k){g_k(res$lambda, res$B_hat, res$B_star, k)})
+
+  res <- diagonalizer_full(
+    data = Z,
+    lags = 1,
+    n_boot = n_boot,
+    bootstrap_method = stationary_bootstrap,
+    block_size = 10,
+    diagonalizer = AMUSE_diagonalizer
+  )
+
+  g_s <- vapply(
+    k_values,
+    function(k) g_k(res$lambda, res$B_hat, res$B_star, k),
+    numeric(1)
+  )
+
   k_values[which.min(g_s)]
 })
 
 summary(signal_dim_estimates_AMUSE)
+
+# Proportion selecting the correct dimension
+mean(signal_dim_estimates_AMUSE == true_q)
+
+# Monte Carlo standard error of the correct-selection rate
+sqrt(
+  mean(signal_dim_estimates_AMUSE == true_q) *
+  (1 - mean(signal_dim_estimates_AMUSE == true_q)) / R
+)
+
+# Distribution of estimated dimensions
+table(signal_dim_estimates_AMUSE)
 ```
 
-```{r}
-hist(signal_dim_estimates_AMUSE)
-```
+This takes about 30 minutes:
 
 ```{r}
 # same thing
 # with SOBI
 set.seed(20261024)
-signal_dim_estimates_SOBI <- replicate(200, {
-  X <- generate_ladle_data(n = 2000)
+
+signal_dim_estimates_SOBI <- replicate(R, {
+  X <- generate_ladle_data(n = 1500)
   Z <- whiten_data(X)
+
   res <- diagonalizer_full(data = Z, 
                          lags = 1:12, 
-                         n_boot = 200, 
-                         bootstrap_method = block_bootstrap, 
-                         block_size = 20, 
+                         n_boot = n_boot, 
+                         bootstrap_method = stationary_bootstrap, 
+                         block_size = 10, 
                          diagonalizer = SOBI_diagonalizer)
-  g_s <- sapply(k_values, function(k){g_k(res$lambda, res$B_hat, res$B_star, k)})
+
+  g_s <- vapply(
+    k_values,
+    function(k) g_k(res$lambda, res$B_hat, res$B_star, k),
+    numeric(1)
+  )
   k_values[which.min(g_s)]
 })
 
-hist(signal_dim_estimates_SOBI)
+summary(signal_dim_estimates_SOBI)
+
+# Proportion selecting the correct dimension
+mean(signal_dim_estimates_SOBI == true_q)
+
+# Monte Carlo standard error of the correct-selection rate
+sqrt(
+  mean(signal_dim_estimates_SOBI == true_q) *
+  (1 - mean(signal_dim_estimates_SOBI == true_q)) / R
+)
+
+# Distribution of estimated dimensions
+table(signal_dim_estimates_SOBI)
 ```
-
-
 
 
 
@@ -536,11 +574,6 @@ block_minimums[B-4] <- g_block_min
 stat_minimums
 block_minimums
 ```
-
-
-
-
-
 
 
 
