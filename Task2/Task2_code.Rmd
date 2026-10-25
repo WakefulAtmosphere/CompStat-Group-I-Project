@@ -281,7 +281,7 @@ par(mfrow=c(3,2))
 
 plot(mu_1_vector, 
      type = "l",
-     ylab = expression(mu[1]), 
+     ylab = expression(mu), 
      main = expression( paste("Trace: ", mu[1], " and ", mu[2], " without restriction")), 
      col="blue", 
      ylim=c(-3, 3))
@@ -290,7 +290,7 @@ lines(mu_2_vector, type = "l", col="orange")
 
 plot(mu_1_vector_2, 
      type = "l", 
-     ylab = expression(mu[1]), 
+     ylab = expression(mu), 
      main = expression( paste("Trace: ", mu[1], " and ", mu[2], " with restriction")),
      col="blue", ylim=c(-3, 3))
 
