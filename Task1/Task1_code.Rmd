@@ -94,21 +94,11 @@ acf_sb <- acf(stationary_bootstrap_replicate[, 1],
                     lag.max = max_lag, plot = FALSE)
 
 par(mfrow = c(2, 2))
-
 plot(acf_original, main = "Original series")
 plot(acf_iid, main = "IID bootstrap")
 plot(acf_mbb, main = "Moving block bootstrap (B = 5)")
 plot(acf_sb, main = "Stationary bootstrap (L = 5)")
 
-par(mfrow = c(1, 1))
-
-# autocov_matrices(Z, lags = lags)
-# autocov_matrices(replicate_iid, lags = lags)
-
-
-acf(Z[, 1], main = "")
-acf(replicate_iid[, 1])
-acf(block_bootstrap_replicate[, 1], main = "")
 
 ```
 
