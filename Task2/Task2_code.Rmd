@@ -76,7 +76,7 @@ sigma2_vector2 <- sapply(separate_gibbs2, function (x) x$sigma2)
 
 ```{r}
 
-png(file="./figures/task2_partB_setting1_trace.png")
+pdf(file="./figures/task2_partB_setting1_trace.pdf")
 
 par(mfrow=c(2,2))
 
@@ -90,7 +90,7 @@ plot(mu_2_vector1, type = "l", ylab = expression(mu[2]), ylim = c(-3,3),
 
 lines(mu_2_vector2, type = "l", col="orange")
 
-legend("topright",
+legend("right",
        legend = c(
          expression( paste("Initial ", mu[1], "<",  mu[2])), 
          expression( paste("Initial ", mu[1], ">",  mu[2]))),
@@ -116,7 +116,7 @@ dev.off()
 
 ```{r}
 
-png(file="./figures/task2_partB_setting1_init1_acf.png")
+pdf(file="./figures/task2_partB_setting1_init1_acf.pdf")
 
 par(mfrow=c(2,2))
 
@@ -132,7 +132,7 @@ dev.off()
 
 ```{r}
 
-png(file="./figures/task2_partB_setting1_init2_acf.png")
+pdf(file="./figures/task2_partB_setting1_init2_acf.pdf")
 
 par(mfrow=c(2,2))
 
@@ -179,7 +179,7 @@ sigma2_vector3 <- sapply(separate_gibbs3, function (x) x$sigma2)
 
 
 ```{r}
-#png(file="./figures/task2_partB_setting1_init3_trace.png")
+#pdf(file="./figures/task2_partB_setting1_init3_trace.pdf")
 
 par(mfrow=c(2,2))
 
@@ -275,7 +275,7 @@ mean(mu_2_vector_2)
 
 ```{r}
 
-png(file="./figures/task2_partB_setting2_trace.png")
+pdf(file="./figures/task2_partB_setting2_trace.pdf")
 
 par(mfrow=c(3,2))
 
@@ -338,7 +338,7 @@ plot_two_acfs <- function(x, y, main) {
        type = "h",
        col = "blue",
        lwd = 2,
-       ylim = c(0, 1),
+       ylim = c(0, 1.2),
        xlab = "Lag",
        ylab = "ACF",
        main = main)
@@ -360,7 +360,7 @@ plot_two_acfs <- function(x, y, main) {
 
 ```{r}
 
-png(file = "./figures/task2_partB_setting2_acf.png")
+pdf(file = "./figures/task2_partB_setting2_acf.pdf")
 
 par(mfrow = c(2, 2))
 
@@ -439,11 +439,11 @@ preprocessed_data <- (faithful$eruptions - mean)/ std
 
 ```{r}
 
-png(file="./figures/task2_faithful_data_histogram.png", width = 1200, height = 600)
-
-par(mfrow=c(1,2))
+pdf(file="./figures/task2_faithful_data_histogram_a.pdf")
 
 hist(faithful$eruptions, breaks = 30, xlab = "Eruption time in minutes", main ="")
+dev.off()
+pdf(file="./figures/task2_faithful_data_histogram_b.pdf")
 
 hist(preprocessed_data, breaks = 30, xlab = "Standardized eruption time", main = "")
 
@@ -481,7 +481,7 @@ sigma2_vector3 <- sapply(faithful_gibbs3, function (x) x$sigma2)
 
 
 ```{r}
-png(file="./figures/task2_faithful_trace.png")
+pdf(file="./figures/task2_faithful_trace.pdf")
 
 par(mfrow=c(2,2))
 
@@ -527,7 +527,7 @@ dev.off()
 
 ```
 ```{r}
-png(file="./figures/task2_faithful_acf.png")
+pdf(file="./figures/task2_faithful_acf.pdf")
 
 par(mfrow=c(2,2))
 
@@ -571,7 +571,7 @@ sigma2_vector <- sapply(faithful_gibbs, function (x) x$sigma2)
 
 ```{r}
 
-#png(file="./figures/task2_faithful_without_restriction_trace.png")
+#pdf(file="./figures/task2_faithful_without_restriction_trace.pdf")
 
 par(mfrow=c(1,3))
 
