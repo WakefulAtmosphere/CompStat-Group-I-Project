@@ -538,7 +538,31 @@ acf(sigma2_vector1, main = expression( paste("ACF: ", sigma^2)))
 
 dev.off()
 ```
-### Without restriction
+
+### Postrior comparison
+
+```{r}
+
+par(mfrow=c(2,2))
+hist(mu_1_vector1)
+hist(mu_2_vector1)
+hist(pi_vector1)
+hist(sigma2_vector1)
+
+```
+
+
+```{r}
+
+faithful_mu1 <- mean(mu_1_vector1)
+faithful_mu2 <- mean(mu_1_vector2)
+faithful_pi <- mean(pi_vector1)
+faithful_sigma2 <- mean(sigma2_vector1)
+
+```
+
+
+### Without restriction test
 
 ```{r}
 
